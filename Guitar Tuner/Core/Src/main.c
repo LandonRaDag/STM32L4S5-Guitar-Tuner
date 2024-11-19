@@ -21,9 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stdio.h"
-#include <string.h>
-#include "arm_math.h"
+#include "global_header.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,8 +53,6 @@ TIM_HandleTypeDef htim2;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-uint32_t adcValue = 0;
-char jackMsg[50];
 
 /* USER CODE END PV */
 
@@ -76,16 +72,7 @@ static void MX_DFSDM1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void inputJack_Init(){
-	  HAL_ADC_Start(&hadc1);
-}
 
-void inputJack(){
-    adcValue = HAL_ADC_GetValue(&hadc1);
-    sprintf(jackMsg, "ADC Value: %lu\r\n", adcValue);  // Fix sprintf usage
-    HAL_UART_Transmit(&huart1, (uint8_t*)jackMsg, strlen(jackMsg), 1000);
-    HAL_Delay(100);
-}
 
 /* USER CODE END 0 */
 
@@ -128,14 +115,16 @@ int main(void)
   MX_USART1_UART_Init();
   MX_DFSDM1_Init();
   /* USER CODE BEGIN 2 */
-  inputJack_Init();
+  HAL_TIM_Base_Start(&htim2);
+  inputJack_Init(&hadc1);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		inputJack();
+		inputJack_UARTValue(&hadc1, &huart1);
 
     /* USER CODE END WHILE */
 
@@ -247,7 +236,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.ContinuousConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
@@ -262,7 +251,7 @@ static void MX_ADC1_Init(void)
 
   /** Configure Regular Channel
   */
-  sConfig.Channel = ADC_CHANNEL_2;
+  sConfig.Channel = ADC_CHANNEL_VREFINT;
   sConfig.Rank = ADC_REGULAR_RANK_1;
   sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
   sConfig.SingleDiff = ADC_SINGLE_ENDED;

@@ -1,4 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
+Core/Src/input_jack.o: ../Core/Src/input_jack.c ../Core/Inc/input_jack.h \
+ ../Core/Inc/global_header.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \
@@ -35,11 +36,11 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
- ../Core/Inc/global_header.h ../Core/Inc/arm_math.h \
- ../Drivers/CMSIS/Include/cmsis_compiler.h \
+ ../Core/Inc/arm_math.h ../Drivers/CMSIS/Include/cmsis_compiler.h \
  ../Core/Inc/signal_processing.h ../Core/Inc/input_jack.h \
- ../Core/Inc/global_header.h ../Core/Inc/mic_input.h
-../Core/Inc/main.h:
+ ../Core/Inc/mic_input.h
+../Core/Inc/input_jack.h:
+../Core/Inc/global_header.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:
@@ -76,10 +77,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h:
-../Core/Inc/global_header.h:
 ../Core/Inc/arm_math.h:
 ../Drivers/CMSIS/Include/cmsis_compiler.h:
 ../Core/Inc/signal_processing.h:
 ../Core/Inc/input_jack.h:
-../Core/Inc/global_header.h:
 ../Core/Inc/mic_input.h:

@@ -1,13 +1,17 @@
 #MicroXplorer Configuration settings - do not modify
-ADC1.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_2
+ADC1.Channel-1\#ChannelRegularConversion=ADC_CHANNEL_VREFINT
 ADC1.ClockPrescaler=ADC_CLOCK_ASYNC_DIV1
 ADC1.CommonPathInternal=ADC_CHANNEL_VREFINT|null|null|null
-ADC1.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,OffsetNumber-0\#ChannelRegularConversion,NbrOfConversionFlag,ClockPrescaler,master,NbrOfConversion,CommonPathInternal
+ADC1.ContinuousConvMode=ENABLE
+ADC1.EnableRegularConversion=ENABLE
+ADC1.ExternalTrigConv=ADC_SOFTWARE_START
+ADC1.IPParameters=ClockPrescaler,ContinuousConvMode,EnableRegularConversion,Rank-1\#ChannelRegularConversion,Channel-1\#ChannelRegularConversion,SamplingTime-1\#ChannelRegularConversion,OffsetNumber-1\#ChannelRegularConversion,NbrOfConversionFlag,ExternalTrigConv,master,NbrOfConversion,Overrun,CommonPathInternal
 ADC1.NbrOfConversion=1
 ADC1.NbrOfConversionFlag=1
-ADC1.OffsetNumber-0\#ChannelRegularConversion=ADC_OFFSET_NONE
-ADC1.Rank-0\#ChannelRegularConversion=1
-ADC1.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_2CYCLES_5
+ADC1.OffsetNumber-1\#ChannelRegularConversion=ADC_OFFSET_NONE
+ADC1.Overrun=ADC_OVR_DATA_PRESERVED
+ADC1.Rank-1\#ChannelRegularConversion=1
+ADC1.SamplingTime-1\#ChannelRegularConversion=ADC_SAMPLETIME_2CYCLES_5
 ADC1.master=1
 CAD.formats=
 CAD.pinconfig=

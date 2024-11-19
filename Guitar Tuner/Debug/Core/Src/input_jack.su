@@ -1,0 +1,3 @@
+../Core/Src/input_jack.c:8:6:inputJack_Init	16	static
+../Core/Src/input_jack.c:12:10:inputJack_getValue	16	static
+../Core/Src/input_jack.c:16:6:inputJack_UARTValue	120	static
