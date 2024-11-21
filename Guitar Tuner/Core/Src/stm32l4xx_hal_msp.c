@@ -441,6 +441,70 @@ void HAL_DFSDM_ChannelMspDeInit(DFSDM_Channel_HandleTypeDef* hdfsdm_channel)
 }
 
 /**
+* @brief OPAMP MSP Initialization
+* This function configures the hardware resources used in this example
+* @param hopamp: OPAMP handle pointer
+* @retval None
+*/
+void HAL_OPAMP_MspInit(OPAMP_HandleTypeDef* hopamp)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  if(hopamp->Instance==OPAMP1)
+  {
+  /* USER CODE BEGIN OPAMP1_MspInit 0 */
+
+  /* USER CODE END OPAMP1_MspInit 0 */
+    /* Peripheral clock enable */
+    __HAL_RCC_OPAMP_CLK_ENABLE();
+
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    /**OPAMP1 GPIO Configuration
+    PA0     ------> OPAMP1_VINP
+    PA3     ------> OPAMP1_VOUT
+    */
+    GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_3;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN OPAMP1_MspInit 1 */
+
+  /* USER CODE END OPAMP1_MspInit 1 */
+
+  }
+
+}
+
+/**
+* @brief OPAMP MSP De-Initialization
+* This function freeze the hardware resources used in this example
+* @param hopamp: OPAMP handle pointer
+* @retval None
+*/
+void HAL_OPAMP_MspDeInit(OPAMP_HandleTypeDef* hopamp)
+{
+  if(hopamp->Instance==OPAMP1)
+  {
+  /* USER CODE BEGIN OPAMP1_MspDeInit 0 */
+
+  /* USER CODE END OPAMP1_MspDeInit 0 */
+    /* Peripheral clock disable */
+    __HAL_RCC_OPAMP_CLK_DISABLE();
+
+    /**OPAMP1 GPIO Configuration
+    PA0     ------> OPAMP1_VINP
+    PA3     ------> OPAMP1_VOUT
+    */
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0|GPIO_PIN_3);
+
+  /* USER CODE BEGIN OPAMP1_MspDeInit 1 */
+
+  /* USER CODE END OPAMP1_MspDeInit 1 */
+  }
+
+}
+
+/**
 * @brief TIM_Base MSP Initialization
 * This function configures the hardware resources used in this example
 * @param htim_base: TIM_Base handle pointer

@@ -7,7 +7,9 @@
 ../Core/Src/stm32l4xx_hal_msp.c:324:6:HAL_DFSDM_ChannelMspInit	4
 ../Core/Src/stm32l4xx_hal_msp.c:385:6:HAL_DFSDM_FilterMspDeInit	2
 ../Core/Src/stm32l4xx_hal_msp.c:417:6:HAL_DFSDM_ChannelMspDeInit	2
-../Core/Src/stm32l4xx_hal_msp.c:449:6:HAL_TIM_Base_MspInit	2
-../Core/Src/stm32l4xx_hal_msp.c:475:6:HAL_TIM_Base_MspDeInit	2
-../Core/Src/stm32l4xx_hal_msp.c:500:6:HAL_UART_MspInit	3
-../Core/Src/stm32l4xx_hal_msp.c:548:6:HAL_UART_MspDeInit	2
+../Core/Src/stm32l4xx_hal_msp.c:449:6:HAL_OPAMP_MspInit	2
+../Core/Src/stm32l4xx_hal_msp.c:484:6:HAL_OPAMP_MspDeInit	2
+../Core/Src/stm32l4xx_hal_msp.c:513:6:HAL_TIM_Base_MspInit	2
+../Core/Src/stm32l4xx_hal_msp.c:539:6:HAL_TIM_Base_MspDeInit	2
+../Core/Src/stm32l4xx_hal_msp.c:564:6:HAL_UART_MspInit	3
+../Core/Src/stm32l4xx_hal_msp.c:612:6:HAL_UART_MspDeInit	2

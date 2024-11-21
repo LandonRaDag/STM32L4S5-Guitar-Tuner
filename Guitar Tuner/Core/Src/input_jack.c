@@ -6,6 +6,12 @@
 #include "input_jack.h"
 
 void inputJack_Init(ADC_HandleTypeDef *hadc, TIM_HandleTypeDef *htim) {
+	HAL_StatusTypeDef status = HAL_ADCEx_Calibration_Start(hadc, ADC_SINGLE_ENDED);
+	if (status == HAL_OK) {
+	    printf("ADC Calibration successful.\n");
+	} else {
+	    printf("ADC Calibration failed.\n");
+	}
 	HAL_TIM_Base_Start(htim);
     //HAL_ADC_Start(hadc);
 }
@@ -26,3 +32,16 @@ void inputJack_DMASampleBuffer(ADC_HandleTypeDef *hadc, uint32_t *buffer, uint32
     HAL_ADC_Start_DMA(hadc, buffer, buffer_size);
 }
 
+void inputJack_StopDMA(ADC_HandleTypeDef *hadc, TIM_HandleTypeDef *htim) {
+
+    if (HAL_ADC_Stop_DMA(hadc) != HAL_OK) {
+        printf("Error: Failed to stop ADC DMA\r\n");
+    }
+
+
+    if (HAL_TIM_Base_Stop(htim) != HAL_OK) {
+        printf("Error: Failed to stop Timer\r\n");
+    }
+
+    printf("ADC DMA and Timer stopped successfully\r\n");
+}

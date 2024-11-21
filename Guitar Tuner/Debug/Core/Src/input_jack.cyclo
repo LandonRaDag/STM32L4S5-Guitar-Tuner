@@ -1,4 +1,5 @@
-../Core/Src/input_jack.c:8:6:inputJack_Init	1
-../Core/Src/input_jack.c:13:10:inputJack_getValue	1
-../Core/Src/input_jack.c:17:6:inputJack_UARTValue	1
-../Core/Src/input_jack.c:25:6:inputJack_DMASampleBuffer	1
+../Core/Src/input_jack.c:8:6:inputJack_Init	2
+../Core/Src/input_jack.c:19:10:inputJack_getValue	1
+../Core/Src/input_jack.c:23:6:inputJack_UARTValue	1
+../Core/Src/input_jack.c:31:6:inputJack_DMASampleBuffer	1
+../Core/Src/input_jack.c:35:6:inputJack_StopDMA	3
