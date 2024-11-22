@@ -58,6 +58,8 @@
 extern DMA_HandleTypeDef hdma_adc1;
 extern ADC_HandleTypeDef hadc1;
 extern DMA_HandleTypeDef hdma_dac1_ch1;
+extern DMA_HandleTypeDef hdma_dfsdm1_flt2;
+extern DFSDM_Filter_HandleTypeDef hdfsdm1_filter2;
 extern TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN EV */
 
@@ -230,6 +232,20 @@ void DMA1_Channel2_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles DMA1 channel3 global interrupt.
+  */
+void DMA1_Channel3_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA1_Channel3_IRQn 0 */
+
+  /* USER CODE END DMA1_Channel3_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_dfsdm1_flt2);
+  /* USER CODE BEGIN DMA1_Channel3_IRQn 1 */
+
+  /* USER CODE END DMA1_Channel3_IRQn 1 */
+}
+
+/**
   * @brief This function handles ADC1 global interrupt.
   */
 void ADC1_IRQHandler(void)
@@ -255,6 +271,20 @@ void TIM2_IRQHandler(void)
   /* USER CODE BEGIN TIM2_IRQn 1 */
 
   /* USER CODE END TIM2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DFSDM1 filter2 global interrupt.
+  */
+void DFSDM1_FLT2_IRQHandler(void)
+{
+  /* USER CODE BEGIN DFSDM1_FLT2_IRQn 0 */
+
+  /* USER CODE END DFSDM1_FLT2_IRQn 0 */
+  HAL_DFSDM_IRQHandler(&hdfsdm1_filter2);
+  /* USER CODE BEGIN DFSDM1_FLT2_IRQn 1 */
+
+  /* USER CODE END DFSDM1_FLT2_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */
