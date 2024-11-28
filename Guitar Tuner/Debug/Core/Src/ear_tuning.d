@@ -1,4 +1,4 @@
-Core/Src/input_jack.o: ../Core/Src/input_jack.c ../Core/Inc/input_jack.h \
+Core/Src/ear_tuning.o: ../Core/Src/ear_tuning.c ../Core/Inc/ear_tuning.h \
  ../Core/Inc/global_header.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
@@ -41,7 +41,7 @@ Core/Src/input_jack.o: ../Core/Src/input_jack.c ../Core/Inc/input_jack.h \
  ../Core/Inc/arm_math.h ../Drivers/CMSIS/Include/cmsis_compiler.h \
  ../Core/Inc/signal_processing.h ../Core/Inc/input_jack.h \
  ../Core/Inc/mic_input.h ../Core/Inc/ear_tuning.h
-../Core/Inc/input_jack.h:
+../Core/Inc/ear_tuning.h:
 ../Core/Inc/global_header.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:

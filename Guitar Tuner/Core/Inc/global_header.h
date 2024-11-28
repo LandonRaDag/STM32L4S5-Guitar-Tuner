@@ -10,6 +10,7 @@
 #include "signal_processing.h"
 #include "input_jack.h"
 #include "mic_input.h"
+#include "ear_tuning.h"
 
 // Standard libraries
 #include <math.h>

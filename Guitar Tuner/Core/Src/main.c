@@ -58,7 +58,21 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
+//Main organizers
+volatile uint8_t press_count = 0;       // Tracks the number of presses
+volatile uint32_t last_press_time = 0;  // Tracks the time of the last press
 
+typedef enum {
+	MODE_EAR_TUNING,
+	MODE_MICROPHONE,
+	MODE_INPUT_JACK
+} Mode;
+
+volatile Mode current_mode = MODE_MICROPHONE;// Default mode
+
+uint8_t button_press;
+
+//input buffers
 uint32_t adc_rec[BUFFER_SIZE];  // Define the buffer to hold ADC samples (16-bit values
 float32_t adc_out[BUFFER_SIZE];
 #define MIC_REC_SIZE (BUFFER_SIZE + 200)
@@ -66,6 +80,9 @@ int32_t mic_rec[MIC_REC_SIZE];
 float32_t mic_out[BUFFER_SIZE];
 float pred_freq = 0.0f;
 
+
+int UART = 0;
+char msg[50];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -84,6 +101,13 @@ static void MX_OPAMP1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
+		button_press = 1;
+
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -125,12 +149,12 @@ int main(void)
   MX_OPAMP1_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_OPAMP_Start(&hopamp1);
+	HAL_OPAMP_Start(&hopamp1);
 
 	hdma_adc1.Init.Mode = DMA_CIRCULAR;
 	//inputJack_Init(&hadc1, &htim2);
 	//inputJack_DMASampleBuffer(&hadc1, adc_buffer, BUFFER_SIZE);
-
+	/*
 	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
 	HAL_Delay(50);
 	mic_hiPassSignal(mic_rec, mic_out, BUFFER_SIZE);
@@ -140,29 +164,48 @@ int main(void)
 	pred_freq = yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE);
 	sprintf(msg, "Predicted frequency : %f  Hz\r\n", pred_freq);
 	HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+	*/
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
+		if (button_press == 1){
+			//ignore button noise
+			HAL_Delay(50);
+			//start recording
+			HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+			HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
 
-		for (int i = 0; i < BUFFER_SIZE; i++) {
-			// Format the message with the current ADC value
-			sprintf(msg, "mic[%d],%f\r\n", i, mic_out[i]);
+			//give time to accumulate samples
+			HAL_Delay(50);
+			mic_hiPassSignal(mic_rec, mic_out, BUFFER_SIZE);
+			HAL_Delay(50);
 
-			// Send the message over UART
+			pred_freq = yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE);
+			sprintf(msg, "Predicted frequency : %f  Hz\r\n", pred_freq);
 			HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+			button_press = 0;
+
+			if (UART == 1){
+				for (int i = 0; i < BUFFER_SIZE; i++) {
+					// Format the message with the current ADC value
+					sprintf(msg, "mic[%d],%f\r\n", i, mic_out[i]);
+
+					// Send the message over UART
+					HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+				}
+
+			}
 
 		}
 
+		/* USER CODE END WHILE */
 
-
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
+		/* USER CODE BEGIN 3 */
 	}
-  /* USER CODE END 3 */
+	/* USER CODE END 3 */
 }
 
 /**
@@ -355,7 +398,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel2.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel2.Init.Awd.Oversampling = 1;
   hdfsdm1_channel2.Init.Offset = 0;
-  hdfsdm1_channel2.Init.RightBitShift = 8;
+  hdfsdm1_channel2.Init.RightBitShift = 4;
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel2) != HAL_OK)
   {
     Error_Handler();
@@ -539,6 +582,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

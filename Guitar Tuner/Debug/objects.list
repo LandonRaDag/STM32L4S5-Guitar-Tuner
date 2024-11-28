@@ -1,3 +1,4 @@
+"./Core/Src/ear_tuning.o"
 "./Core/Src/input_jack.o"
 "./Core/Src/main.o"
 "./Core/Src/mic_input.o"
