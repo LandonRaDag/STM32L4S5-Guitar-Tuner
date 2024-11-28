@@ -36,7 +36,6 @@
 
 /* Private macro -------------------------------------------------------------*/
 /* USER CODE BEGIN PM */
-int bufferFull = 0;
 
 /* USER CODE END PM */
 
@@ -59,9 +58,13 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
-#define BUFFER_SIZE 48000  // Define the size of the buffer (number of samples)
-uint32_t adc_buffer[BUFFER_SIZE];  // Define the buffer to hold ADC samples (16-bit values
-uint32_t mic_buffer[BUFFER_SIZE];
+
+uint32_t adc_rec[BUFFER_SIZE];  // Define the buffer to hold ADC samples (16-bit values
+float32_t adc_out[BUFFER_SIZE];
+#define MIC_REC_SIZE (BUFFER_SIZE + 200)
+int32_t mic_rec[MIC_REC_SIZE];
+float32_t mic_out[BUFFER_SIZE];
+float pred_freq = 0.0f;
 
 /* USER CODE END PV */
 
@@ -122,26 +125,37 @@ int main(void)
   MX_OPAMP1_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_OPAMP_Start(&hopamp1);
+
 	hdma_adc1.Init.Mode = DMA_CIRCULAR;
-	inputJack_Init(&hadc1, &htim2);
+	//inputJack_Init(&hadc1, &htim2);
 	//inputJack_DMASampleBuffer(&hadc1, adc_buffer, BUFFER_SIZE);
 
-	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_buffer, BUFFER_SIZE);
+	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+	HAL_Delay(50);
+	mic_hiPassSignal(mic_rec, mic_out, BUFFER_SIZE);
+	HAL_Delay(50);
+
+	char msg[50];
+	pred_freq = yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE);
+	sprintf(msg, "Predicted frequency : %f  Hz\r\n", pred_freq);
+	HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1)
 	{
-		char msg[50];
+
 		for (int i = 0; i < BUFFER_SIZE; i++) {
 			// Format the message with the current ADC value
-			sprintf(msg, "Mic[%d],%d\r\n", i, mic_buffer[i]);
+			sprintf(msg, "mic[%d],%f\r\n", i, mic_out[i]);
 
 			// Send the message over UART
 			HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 		}
+
 
 
     /* USER CODE END WHILE */
@@ -341,7 +355,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel2.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel2.Init.Awd.Oversampling = 1;
   hdfsdm1_channel2.Init.Offset = 0;
-  hdfsdm1_channel2.Init.RightBitShift = 0x00;
+  hdfsdm1_channel2.Init.RightBitShift = 8;
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel2) != HAL_OK)
   {
     Error_Handler();

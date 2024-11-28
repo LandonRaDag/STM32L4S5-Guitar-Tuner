@@ -34,12 +34,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define SAMPLE_RATE 48000       // Sampling rate in Hz
-#define MIC_BUFFER_SIZE 2048    // Buffer size for microphone data
-#define ADC_BUFFER_SIZE 2048    // Buffer size for input jack data
-#define THRESHOLD 0.1f          // Threshold for the YIN algorithm
-#define HIGH_PASS_FREQ 50       // High-pass filter frequency
-#define LOW_PASS_FREQ 2000      // Low-pass filter frequency
+
+
 
 /* USER CODE END PD */
 
@@ -74,34 +70,34 @@ void detectFrequency(const int32_t *buffer, uint32_t length, float32_t *frequenc
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 float32_t yin_detect_frequency(const float32_t *buffer, uint32_t length, float32_t sample_rate) {
-    float32_t min_value = 1.0f;
-    uint32_t min_index = 0;
-    float32_t cumulative_diff[length];
-    float32_t threshold = THRESHOLD;
+	float32_t min_value = 1.0f;
+	uint32_t min_index = 0;
+	float32_t cumulative_diff[length];
+	float32_t threshold = THRESHOLD;
 
-    // Step 1: Calculate difference function
-    for (uint32_t lag = 1; lag < length / 2; lag++) {
-        float32_t sum = 0.0f;
-        for (uint32_t i = 0; i < length - lag; i++) {
-            float32_t diff = buffer[i] - buffer[i + lag];
-            sum += diff * diff;
-        }
-        cumulative_diff[lag] = sum / (float32_t)(length - lag);
+	// Step 1: Calculate difference function
+	for (uint32_t lag = 1; lag < length / 2; lag++) {
+		float32_t sum = 0.0f;
+		for (uint32_t i = 0; i < length - lag; i++) {
+			float32_t diff = buffer[i] - buffer[i + lag];
+			sum += diff * diff;
+		}
+		cumulative_diff[lag] = sum / (float32_t)(length - lag);
 
-        // Step 2: Check if cumulative difference crosses the threshold
-        if (cumulative_diff[lag] < threshold && lag > 1) {
-            if (cumulative_diff[lag] < min_value) {
-                min_value = cumulative_diff[lag];
-                min_index = lag;
-            }
-        }
-    }
+		// Step 2: Check if cumulative difference crosses the threshold
+		if (cumulative_diff[lag] < threshold && lag > 1) {
+			if (cumulative_diff[lag] < min_value) {
+				min_value = cumulative_diff[lag];
+				min_index = lag;
+			}
+		}
+	}
 
-    if (min_index > 0) {
-            return sample_rate / (float32_t)min_index;
-        } else {
-            return 0.0f;  // No valid frequency found
-        }
+	if (min_index > 0) {
+		return sample_rate / (float32_t)min_index;
+	} else {
+		return 0.0f;  // No valid frequency found
+	}
 }
 
 void HAL_DMA_ConvCpltCallback(DMA_HandleTypeDef *hdma) {
