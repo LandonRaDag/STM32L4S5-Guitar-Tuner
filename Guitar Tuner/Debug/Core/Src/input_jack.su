@@ -1,3 +1,5 @@
-../Core/Src/input_jack.c:8:6:inputJack_Init	16	static
-../Core/Src/input_jack.c:12:10:inputJack_getValue	16	static
-../Core/Src/input_jack.c:16:6:inputJack_UARTValue	120	static
+../Core/Src/input_jack.c:8:6:inputJack_Init	24	static
+../Core/Src/input_jack.c:19:10:inputJack_getValue	16	static
+../Core/Src/input_jack.c:23:6:inputJack_UARTValue	120	static
+../Core/Src/input_jack.c:31:6:inputJack_DMASampleBuffer	24	static
+../Core/Src/input_jack.c:35:6:inputJack_StopDMA	16	static

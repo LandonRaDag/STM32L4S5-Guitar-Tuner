@@ -61,7 +61,7 @@
 /*#define HAL_MMC_MODULE_ENABLED   */
 /*#define HAL_NAND_MODULE_ENABLED   */
 /*#define HAL_NOR_MODULE_ENABLED   */
-/*#define HAL_OPAMP_MODULE_ENABLED   */
+#define HAL_OPAMP_MODULE_ENABLED
 /*#define HAL_OSPI_MODULE_ENABLED   */
 /*#define HAL_OSPI_MODULE_ENABLED   */
 /*#define HAL_PCD_MODULE_ENABLED   */
@@ -111,7 +111,7 @@
   *        This value is the default MSI range value after Reset.
   */
 #if !defined  (MSI_VALUE)
-  #define MSI_VALUE    ((uint32_t)4000000U) /*!< Value of the Internal oscillator in Hz*/
+  #define MSI_VALUE    ((uint32_t)32000000U) /*!< Value of the Internal oscillator in Hz*/
 #endif /* MSI_VALUE */
 /**
   * @brief Internal High Speed oscillator (HSI) value.

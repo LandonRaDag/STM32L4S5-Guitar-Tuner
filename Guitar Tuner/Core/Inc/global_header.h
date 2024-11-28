@@ -12,8 +12,13 @@
 #include "mic_input.h"
 
 // Standard libraries
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
+// Global stuff
+#define SAMPLE_RATE 48000       // Sampling rate in Hz
+#define BUFFER_SIZE 2048    // Buffer size for recorded (microphone OR jack) data
 
 #endif // GLOBAL_HEADER_H
