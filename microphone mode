@@ -1,0 +1,672 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2024 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+#include <string.h>
+#include <stdio.h>
+
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+volatile uint8_t press_count = 0;       // Tracks the number of presses
+volatile uint32_t last_press_time = 0;  // Tracks the time of the last press
+
+
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+typedef enum {
+    MODE_EAR_TUNING,
+    MODE_MICROPHONE,
+} Mode;
+
+volatile Mode current_mode =  MODE_MICROPHONE;// Default mode
+
+
+
+/* USER CODE BEGIN PV */
+typedef struct {
+    const char* note;
+    float frequency;
+} ReferenceNote;
+
+ReferenceNote referenceNotes[] = {
+    {"E", 82.41},  // E2
+    {"A", 110.00}, // A2
+    {"D", 146.83}, // D3
+    {"G", 196.00}, // G3
+    {"B", 246.94}, // B3
+    {"e", 329.63}  // E4
+};
+
+uint8_t current_note_index = 0;// Current note index
+float receivedFrequency = 0.0;
+/* USER CODE END PV */
+
+
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+DAC_HandleTypeDef hdac1;
+DMA_HandleTypeDef hdma_dac1_ch1;
+
+TIM_HandleTypeDef htim2;
+
+UART_HandleTypeDef huart1;
+
+/* USER CODE BEGIN PV */
+uint8_t received_data;
+
+uint8_t signal_source = 0;    // 0 = Microphone, 1 = Input Jack
+uint8_t ear_tuning_mode = 0;  // 0 = Disabled, 1 = Enabled
+uint32_t button_press_start = 0; // Time when button was pressed
+
+//uint8_t current_note_index = 0;
+
+//uint32_t last_interrupt_time = 0;  // Tracks last interrupt time
+
+// Index of the current note
+const char *guitar_notes[] = {"E", "A", "D", "G", "B", "e"};  // Guitar notes
+
+
+/* USER CODE END PV */
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
+static void MX_TIM2_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_DAC1_Init(void);
+/* USER CODE BEGIN PFP */
+/* USER CODE BEGIN PFP */
+void switchMode(void);  // Prototype for mode switching function
+void changeNote(void);  // Prototype for note changing function
+void evaluateFrequency(float receivedFrequency);
+
+/* USER CODE END PFP */
+
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+
+
+
+
+/* USER CODE END 0 */
+
+/**
+  * @brief  The application entry point.
+  * @retval int
+  */
+int main(void)
+{
+
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_TIM2_Init();
+  MX_USART1_UART_Init();
+  MX_DAC1_Init();
+  /* USER CODE BEGIN 2 */
+  HAL_UART_Receive_IT(&huart1, &received_data, 1);
+  /* USER CODE END 2 */
+
+ receivedFrequency = 147.5;
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+
+//  evaluateFrequency(329.63);
+//  evaluateFrequency(188);
+//  evaluateFrequency(149);
+//  evaluateFrequency(147);
+
+  // Start the DAC and set a test value
+  HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+  HAL_DAC_SetValue(&hdac1, DAC_CHANNEL_1, DAC_ALIGN_8B_R, 127); // Midpoint value
+
+
+  while (1) {
+      static uint32_t first_press_time = 0;  // Time of the first press
+      static uint8_t action_pending = 0;    // Flag for pending single press action
+      uint32_t current_time = HAL_GetTick();  // Get current system time
+
+      // Handle first press
+      if (press_count == 1 && action_pending == 0) {
+          first_press_time = current_time;  // Record the first press time
+          action_pending = 1;               // Mark action as pending
+      }
+
+      // Handle single press timeout
+      if (press_count == 1 && action_pending == 1) {
+          if ((current_time - first_press_time) > 400) {  // Timeout for double-click detection
+              if (current_mode == MODE_MICROPHONE) {  // Only process in Microphone Mode
+                  // Notify the user that the system is listening
+                  HAL_UART_Transmit(&huart1, (uint8_t *)"Listening...\r\n", 14, HAL_MAX_DELAY);
+
+                  // Wait for a frequency from Ahmed's code
+                  extern float receivedFrequency; // Assume updated dynamically by Ahmed's code
+                  if (receivedFrequency > 0.0f) { // Process valid frequency
+                      evaluateFrequency(receivedFrequency); // Evaluate the frequency
+                  } else {
+                      HAL_UART_Transmit(&huart1, (uint8_t *)"No frequency detected. Try again.\r\n", 35, HAL_MAX_DELAY);
+                  }
+              } else if (current_mode == MODE_EAR_TUNING) {
+                  changeNote();  // Change note in Ear Tuning Mode
+              }
+              press_count = 0;        // Reset press count
+              action_pending = 0;     // Reset action flag
+          }
+      }
+
+      // Handle double click
+      if (press_count == 2) {
+          switchMode();  // Switch modes on double click
+          press_count = 0;        // Reset press count
+          action_pending = 0;     // Reset action flag
+      }
+  }
+
+
+//  while (1)
+//  {
+//    /* USER CODE END WHILE */
+//	  static uint32_t first_press_time = 0;  // Time of the first press
+//	  	      static uint8_t action_pending = 0;    // Flag for pending single press action
+//	  	      uint32_t current_time = HAL_GetTick();  // Get current system time
+//
+//	  	      // Handle first press
+//	  	      if (press_count == 1 && action_pending == 0) {
+//	  	          first_press_time = current_time;  // Record the first press time
+//	  	          action_pending = 1;               // Mark action as pending
+////	  	          HAL_UART_Transmit(&huart1, (uint8_t *)"First Press Detected\r\n", 23, HAL_MAX_DELAY);
+//	  	      }
+//
+//	  	      // Handle single press timeout
+//	  	      if (press_count == 1 && action_pending == 1) {
+//	  	          if ((current_time - first_press_time) > 400) {  // Timeout for double-click detection
+//	  	              if (current_mode == MODE_EAR_TUNING) {  // Only allow note change in Ear Tuning mode
+////	  	                  HAL_UART_Transmit(&huart1, (uint8_t *)"Single Click Action\r\n", 23, HAL_MAX_DELAY);
+//	  	                  changeNote();  // Execute single click action
+//	  	              } else {
+////	  	                  HAL_UART_Transmit(&huart1, (uint8_t *)"Single Click Ignored (Not Ear Tuning)\r\n", 40, HAL_MAX_DELAY);
+//	  	              }
+//	  	              press_count = 0;        // Reset press count
+//	  	              action_pending = 0;     // Reset action flag
+//	  	          }
+//	  	      }
+//
+//	  	      // Handle double click
+//	  	      if (press_count == 2) {
+////	  	          HAL_UART_Transmit(&huart1, (uint8_t *)"Double Click Action\r\n", 23, HAL_MAX_DELAY);
+//	  	          switchMode();  // Execute double click action
+//	  	          press_count = 0;        // Reset press count
+//	  	          action_pending = 0;     // Reset action flag
+//	  	      }
+//
+//	  	    if (current_mode == MODE_MICROPHONE) {
+//	  	           // Example: Assume `receivedFrequency` is updated dynamically by Ahmed's code
+//	  	           extern float receivedFrequency; // Make sure to define this variable globally or pass it appropriately
+//
+//	  	           if (receivedFrequency > 0.0f) { // Process valid frequency
+//	  	               evaluateFrequency(receivedFrequency);
+//	  	               HAL_Delay(1000); // Delay to avoid rapid reprocessing
+//	  	           }
+//	  	       }
+//
+//
+//    /* USER CODE BEGIN 3 */
+//
+//  /* USER CODE END 3 */
+//}
+}
+
+
+
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Configure the main internal regulator output voltage
+  */
+  if (HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1_BOOST) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+  RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+  RCC_OscInitStruct.MSICalibrationValue = 0;
+  RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_6;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+  RCC_OscInitStruct.PLL.PLLM = 1;
+  RCC_OscInitStruct.PLL.PLLN = 60;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief DAC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_DAC1_Init(void)
+{
+
+  /* USER CODE BEGIN DAC1_Init 0 */
+
+  /* USER CODE END DAC1_Init 0 */
+
+  DAC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN DAC1_Init 1 */
+
+  /* USER CODE END DAC1_Init 1 */
+
+  /** DAC Initialization
+  */
+  hdac1.Instance = DAC1;
+  if (HAL_DAC_Init(&hdac1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** DAC channel OUT1 config
+  */
+  sConfig.DAC_SampleAndHold = DAC_SAMPLEANDHOLD_DISABLE;
+  sConfig.DAC_Trigger = DAC_TRIGGER_T2_TRGO;
+  sConfig.DAC_HighFrequency = DAC_HIGH_FREQUENCY_INTERFACE_MODE_ABOVE_80MHZ;
+  sConfig.DAC_OutputBuffer = DAC_OUTPUTBUFFER_ENABLE;
+  sConfig.DAC_ConnectOnChipPeripheral = DAC_CHIPCONNECT_DISABLE;
+  sConfig.DAC_UserTrimming = DAC_TRIMMING_FACTORY;
+  if (HAL_DAC_ConfigChannel(&hdac1, &sConfig, DAC_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN DAC1_Init 2 */
+
+  /* USER CODE END DAC1_Init 2 */
+
+}
+
+/**
+  * @brief TIM2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM2_Init(void)
+{
+
+  /* USER CODE BEGIN TIM2_Init 0 */
+
+  /* USER CODE END TIM2_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM2_Init 1 */
+
+  /* USER CODE END TIM2_Init 1 */
+  htim2.Instance = TIM2;
+  htim2.Init.Prescaler = 0;
+  htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim2.Init.Period = 4294967295;
+  htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_UPDATE;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM2_Init 2 */
+
+  /* USER CODE END TIM2_Init 2 */
+
+}
+
+/**
+  * @brief USART1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART1_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART1_Init 0 */
+
+  /* USER CODE END USART1_Init 0 */
+
+  /* USER CODE BEGIN USART1_Init 1 */
+
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  huart1.Init.OneBitSampling = UART_ONE_BIT_SAMPLE_DISABLE;
+  huart1.Init.ClockPrescaler = UART_PRESCALER_DIV1;
+  huart1.AdvancedInit.AdvFeatureInit = UART_ADVFEATURE_NO_INIT;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetTxFifoThreshold(&huart1, UART_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_SetRxFifoThreshold(&huart1, UART_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_UARTEx_DisableFifoMode(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART1_Init 2 */
+
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void)
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMAMUX1_CLK_ENABLE();
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin : PC13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
+}
+
+/* USER CODE BEGIN 4 */
+
+
+#define DEBOUNCE_DELAY 50  // Debounce delay in milliseconds
+
+
+
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
+        uint32_t current_time = HAL_GetTick();  // Get the current system time
+
+        // Debounce logic: Ignore presses within 50 ms
+        if ((current_time - last_press_time) < DEBOUNCE_DELAY) {
+            return;  // Ignore bouncing
+        }
+
+        last_press_time = current_time;  // Update the last press time
+
+        // Increment press count
+        press_count++;
+
+        // Debug output
+//        char debug_msg[50];
+//        sprintf(debug_msg, "Press Count: %d\r\n", press_count);
+//        HAL_UART_Transmit(&huart1, (uint8_t *)debug_msg, strlen(debug_msg), HAL_MAX_DELAY);
+    }
+}
+
+
+
+
+
+void switchMode() {
+    current_mode = (current_mode + 1) % 2;  // Cycle between 0, 1 (Ear Tuning, Microphone)
+
+    switch (current_mode) {
+        case MODE_EAR_TUNING:
+            HAL_UART_Transmit(&huart1, (uint8_t *)"Mode: Ear Tuning\r\n", 19, HAL_MAX_DELAY);
+            break;
+        case MODE_MICROPHONE:
+            HAL_UART_Transmit(&huart1, (uint8_t *)"Mode: Microphone Tuning\r\n", 26, HAL_MAX_DELAY);
+            break;
+
+    }
+}
+
+
+
+
+void changeNote() {
+    current_note_index = (current_note_index + 1) % 6;  // Cycle through 0 to 5 (E, A, D, G, B, e)
+
+    char note_msg[30];
+    sprintf(note_msg, "Playing Note: %s\r\n", guitar_notes[current_note_index]);
+    HAL_UART_Transmit(&huart1, (uint8_t *)note_msg, strlen(note_msg), HAL_MAX_DELAY);
+}
+
+
+
+
+void evaluateFrequency(float receivedFrequency) {
+
+
+    float targetFrequency = 0.0f;
+    const char* targetNote = "Unknown";
+    char result[50];
+    int isValid = 0;  // Flag to indicate if a valid targetFrequency is found
+
+    // Determine the target frequency
+    for (int i = 0; i < sizeof(referenceNotes) / sizeof(ReferenceNote); i++) {
+        if (receivedFrequency >= referenceNotes[i].frequency - 5.0 &&
+            receivedFrequency <= referenceNotes[i].frequency + 5.0) {
+            targetFrequency = referenceNotes[i].frequency;
+            targetNote = referenceNotes[i].note;
+            current_note_index = i;  // Update current note index for consistency
+            isValid = 1;
+            break;
+        }
+    }
+
+    // If no valid target frequency is found
+    if (!isValid) {
+        sprintf(result, "Frequency %.2f Hz is too far from any target!\r\n", receivedFrequency);
+        HAL_UART_Transmit(&huart1, (uint8_t *)result, strlen(result), HAL_MAX_DELAY);
+        return;
+    }
+
+    // Calculate the difference between received and target frequencies
+    float difference = receivedFrequency - targetFrequency;
+
+    // Logic to determine the tuning status
+    if (difference >= -1.0 && difference <= 1.0) {
+        // Perfectly In Tune (±1 Hz)
+        sprintf(result, ">%s< (%.2f Hz)  In Tune\r\n ", targetNote, receivedFrequency);
+    } else if (difference > 1.0 && difference <= 2.0) {
+        // Slightly Sharp (1 Hz < Difference <= 2 Hz)
+        sprintf(result, "%s< (%.2f Hz)  Tune Down\r\n ", targetNote, receivedFrequency);
+    } else if (difference < -1.0 && difference >= -2.0) {
+        // Slightly Flat (-2 Hz <= Difference < -1 Hz)
+        sprintf(result, "%s> (%.2f Hz)  Tune Up\r\n ", targetNote, receivedFrequency);
+    } else if (difference > 2.0 && difference <= 5.0) {
+        // Out of Tune (2 Hz < Difference <= 5 Hz, Sharp)
+        sprintf(result, "%s<< (%.2f Hz)  Tune Down\r\n ", targetNote, receivedFrequency);
+    } else if (difference < -2.0 && difference >= -5.0) {
+        // Out of Tune (-5 Hz <= Difference < -2 Hz, Flat)
+        sprintf(result, "%s>> (%.2f Hz)  Tune Up\r\n ", targetNote, receivedFrequency);
+    } else {
+        // Ignore frequencies beyond ±5 Hz
+        sprintf(result, "Frequency %.2f Hz is too far off target!\r\n", receivedFrequency);
+    }
+
+    // Send result via UART
+    HAL_UART_Transmit(&huart1, (uint8_t *)result, strlen(result), HAL_MAX_DELAY);
+}
+
+
+
+ //UART receive callback
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
+    if (huart->Instance == USART1) {
+        HAL_UART_Transmit(&huart1, &received_data, 1, HAL_MAX_DELAY);
+        HAL_UART_Receive_IT(&huart1, &received_data, 1);
+    }
+
+}
+
+
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+
+
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */
