@@ -35,6 +35,7 @@ void mic_process(int32_t *interim_buffer, float32_t *good_buffer, int good_buffe
     // Initialize the previous output (y[n-1]) and previous input (x[n-1])
     float prev_output = 0.0f;
     float prev_input = 0.0f;
+    float sum = 0.0f;
 
     //high pass
     for (int i = 0; i < good_buffer_length; i++) {
@@ -46,12 +47,20 @@ void mic_process(int32_t *interim_buffer, float32_t *good_buffer, int good_buffe
 
         // Store the filtered output
         good_buffer[i] = current_output;
+        sum += current_output * current_output;
 
         // Update previous input and output for the next iteration
         prev_input = current_input;
         prev_output = current_output;
     }
 
+    // Check against the threshold
+
+    float32_t rms = sqrtf((float)sum / (float)good_buffer_length);
+    if (rms < 500) {
+        good_buffer[0] = -25.0f; // Sentinel value to indicate skipping
+        return;
+    }
     //lowpass
     prev_output = 0.0f;
     for (int i = 0; i < good_buffer_length; i++) {
