@@ -69,7 +69,8 @@ typedef enum {
 
 volatile Mode current_mode = MODE_MICROPHONE;// Default mode
 
-uint8_t button_press;
+uint32_t button_press_time = 0;   // Time when the button was pressed
+uint32_t button_release_time = 0;  // Time when the button was released
 
 //input buffers
 #define MIC_REC_SIZE (BUFFER_SIZE + 200)
@@ -78,9 +79,10 @@ float32_t mic_out[BUFFER_SIZE];
 
 GuitarString strings[6];
 GuitarString *currString;
+int process = 0;
 
 int UART = 0;
-char msg[50];
+char msg[100];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -100,11 +102,44 @@ static void MX_OPAMP1_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
-		button_press = 1;
+void toggleMode() {
+    if (current_mode == MODE_MICROPHONE) {
+        current_mode = MODE_EAR_TUNING;  // Switch to ear tuning mode
+        HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+        sprintf(msg, "Current mode: Ear Tuning\r\n");
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+    } else {
+        current_mode = MODE_MICROPHONE;  // Switch to microphone mode
+        HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
 
-	}
+        sprintf(msg, "Current mode: Microphone Tuning\r\n");
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+    }
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+    if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
+
+    	//CHECK BUTTON RELEASE
+    	if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET) {  // Button is released
+            button_release_time = HAL_GetTick();
+            if (button_release_time - button_press_time >= 1000) {
+                toggleMode();  // Button was held long enough
+            } else {
+            	switchString(strings, &currString);
+    			sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
+    		    HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+            }
+        } else {  // Button is pressed
+            button_press_time = HAL_GetTick();
+        }
+    }
+}
+
+void myDMA_XferCpltCallback(DMA_HandleTypeDef *hdma){
+    if (hdma == &hdma_dfsdm1_flt2) {  // Check if the DMA is for DFSDM
+    	process = 1;
+    }
 }
 
 /* USER CODE END 0 */
@@ -146,73 +181,95 @@ int main(void)
   MX_DFSDM1_Init();
   MX_OPAMP1_Init();
   /* USER CODE BEGIN 2 */
-
-	hdma_adc1.Init.Mode = DMA_CIRCULAR;
-	//inputJack_Init(&hadc1, &htim2);
-	//inputJack_DMASampleBuffer(&hadc1, adc_buffer, BUFFER_SIZE);
-	/*
-	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
-	HAL_Delay(50);
-	mic_process(mic_rec, mic_out, BUFFER_SIZE);
-	HAL_Delay(50);
-
-	char msg[50];
-	pred_freq = yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE);
-	sprintf(msg, "Predicted frequency : %f  Hz\r\n", pred_freq);
-	HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-	*/
-
-	initializeGuitarStrings(strings, &currString);
-
+  initializeGuitarStrings(strings, &currString);
+  sprintf(msg, "Welcome to the tuner! Hole blue button to switch between ear tuner and mic. tap to switch strings\r\n");
+  HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	while (1)
-	{
-		if (button_press == 1){
+  while (1){
+	  switch (current_mode) {
+	  case MODE_EAR_TUNING:
+		  //sprintf(msg, "Current mode: Ear Tuning\r\n");
+		  //HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
 
-			//start recording
-			HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
-			//ignore button noise
-			HAL_Delay(50);
-			HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+		  break;
 
-			//give time to accumulate samples
-			HAL_Delay(50);
-			mic_process(mic_rec, mic_out, BUFFER_SIZE);
-			HAL_Delay(50);
+	  case MODE_MICROPHONE:
 
-			yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
-			sprintf(msg, "Predicted frequency : %f  Hz\r\n", currString->frequency);
-			HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-			button_press = 0;
+		  if (process == 1){
 
-			/*
+			  mic_process(mic_rec, mic_out, BUFFER_SIZE);
+
+			  yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
+			  sprintf(msg, "Predicted frequency: %f Hz \r\n", currString->frequency);
+
+			  HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+			  HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+			  HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+			  process = 0;
+		  }
+
+		  break;
+
+	  }
+
+	  /*
+	  if (button_press == 1){
+
+		  //scrap recording
+		  HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+		  //ignore button noise
+		  HAL_Delay(10);
+		  switchString(strings, &currString);
+		  HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+		  button_press = 0;
+
+	  }
+	  if (process == 1){
+
+		  current_time = HAL_GetTick();
+		  mic_process(mic_rec, mic_out, BUFFER_SIZE);
+
+		  yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
+		  sprintf(msg, "Predicted frequency: %f Hz \r\n", currString->frequency);
+
+		  HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+		  HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+		  HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+		  process = 0;
+
+
 			switchString(strings, &currString);
 
 			sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
 		    HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-			*/
 
-			if (UART == 1){
-				for (int i = 0; i < BUFFER_SIZE; i++) {
-					// Format the message with the current ADC value
-					sprintf(msg, "mic[%d],%f\r\n", i, mic_out[i]);
 
-					// Send the message over UART
-					HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-				}
 
-			}
+		  if (UART == 1){
+			  for (int i = 0; i < BUFFER_SIZE; i++) {
+				  // Format the message with the current ADC value
+				  sprintf(msg, "mic[%d],%f\r\n", i, mic_out[i]);
 
-		}
+				  // Send the message over UART
+				  HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+			  }
 
-		/* USER CODE END WHILE */
+		  }
 
-		/* USER CODE BEGIN 3 */
-	}
-	/* USER CODE END 3 */
+
+
+	  }*/
+
+	  /* USER CODE END WHILE */
+
+	  /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
 }
 
 /**
@@ -564,6 +621,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
+  /* DMAMUX1_OVR_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMAMUX1_OVR_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMAMUX1_OVR_IRQn);
 
 }
 
@@ -586,7 +646,7 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 

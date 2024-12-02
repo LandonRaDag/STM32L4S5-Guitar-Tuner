@@ -241,7 +241,7 @@ void DMA1_Channel3_IRQHandler(void)
   /* USER CODE END DMA1_Channel3_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_dfsdm1_flt2);
   /* USER CODE BEGIN DMA1_Channel3_IRQn 1 */
-
+  myDMA_XferCpltCallback(&hdma_dfsdm1_flt2);
   /* USER CODE END DMA1_Channel3_IRQn 1 */
 }
 
@@ -299,6 +299,20 @@ void DFSDM1_FLT2_IRQHandler(void)
   /* USER CODE BEGIN DFSDM1_FLT2_IRQn 1 */
 
   /* USER CODE END DFSDM1_FLT2_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMAMUX1 overrun interrupt.
+  */
+void DMAMUX1_OVR_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMAMUX1_OVR_IRQn 0 */
+
+  /* USER CODE END DMAMUX1_OVR_IRQn 0 */
+
+  /* USER CODE BEGIN DMAMUX1_OVR_IRQn 1 */
+
+  /* USER CODE END DMAMUX1_OVR_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

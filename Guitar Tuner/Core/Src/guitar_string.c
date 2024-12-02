@@ -75,7 +75,7 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
 	}
 
 	if (min_index > 0) {
-		float32_t detected_freq = (float32_t)sample_rate / (float32_t)min_index;
+		float32_t detected_freq = ((float32_t)sample_rate / (float32_t)min_index) + 1.0f;
 		string->frequency = detected_freq;  // Update the string's frequency
 	}
 
