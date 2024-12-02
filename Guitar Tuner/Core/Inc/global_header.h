@@ -4,13 +4,14 @@
 #define GLOBAL_HEADER_H
 
 // STM32 HAL includes
+
 #include "stm32l4xx_hal.h"
 
 #include "arm_math.h"
-#include "signal_processing.h"
-#include "input_jack.h"
 #include "mic_input.h"
 #include "ear_tuning.h"
+#include "kalmanFilter_CMSIS.h"
+#include "guitar_string.h"
 
 // Standard libraries
 #include <math.h>

@@ -65,7 +65,6 @@ volatile uint32_t last_press_time = 0;  // Tracks the time of the last press
 typedef enum {
 	MODE_EAR_TUNING,
 	MODE_MICROPHONE,
-	MODE_INPUT_JACK
 } Mode;
 
 volatile Mode current_mode = MODE_MICROPHONE;// Default mode
@@ -73,13 +72,12 @@ volatile Mode current_mode = MODE_MICROPHONE;// Default mode
 uint8_t button_press;
 
 //input buffers
-uint32_t adc_rec[BUFFER_SIZE];  // Define the buffer to hold ADC samples (16-bit values
-float32_t adc_out[BUFFER_SIZE];
 #define MIC_REC_SIZE (BUFFER_SIZE + 200)
 int32_t mic_rec[MIC_REC_SIZE];
 float32_t mic_out[BUFFER_SIZE];
-float pred_freq = 0.0f;
 
+GuitarString strings[6];
+GuitarString *currString;
 
 int UART = 0;
 char msg[50];
@@ -149,15 +147,13 @@ int main(void)
   MX_OPAMP1_Init();
   /* USER CODE BEGIN 2 */
 
-	HAL_OPAMP_Start(&hopamp1);
-
 	hdma_adc1.Init.Mode = DMA_CIRCULAR;
 	//inputJack_Init(&hadc1, &htim2);
 	//inputJack_DMASampleBuffer(&hadc1, adc_buffer, BUFFER_SIZE);
 	/*
 	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
 	HAL_Delay(50);
-	mic_hiPassSignal(mic_rec, mic_out, BUFFER_SIZE);
+	mic_process(mic_rec, mic_out, BUFFER_SIZE);
 	HAL_Delay(50);
 
 	char msg[50];
@@ -165,6 +161,9 @@ int main(void)
 	sprintf(msg, "Predicted frequency : %f  Hz\r\n", pred_freq);
 	HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 	*/
+
+	initializeGuitarStrings(strings, &currString);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -172,21 +171,29 @@ int main(void)
 	while (1)
 	{
 		if (button_press == 1){
-			//ignore button noise
-			HAL_Delay(50);
+
 			//start recording
 			HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+			//ignore button noise
+			HAL_Delay(50);
 			HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
 
 			//give time to accumulate samples
 			HAL_Delay(50);
-			mic_hiPassSignal(mic_rec, mic_out, BUFFER_SIZE);
+			mic_process(mic_rec, mic_out, BUFFER_SIZE);
 			HAL_Delay(50);
 
-			pred_freq = yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE);
-			sprintf(msg, "Predicted frequency : %f  Hz\r\n", pred_freq);
+			yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
+			sprintf(msg, "Predicted frequency : %f  Hz\r\n", currString->frequency);
 			HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 			button_press = 0;
+
+			/*
+			switchString(strings, &currString);
+
+			sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
+		    HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+			*/
 
 			if (UART == 1){
 				for (int i = 0; i < BUFFER_SIZE; i++) {

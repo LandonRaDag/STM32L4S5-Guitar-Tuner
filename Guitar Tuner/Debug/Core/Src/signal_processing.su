@@ -1,2 +1,0 @@
-../Core/Src/signal_processing.c:12:11:yin_detect_frequency	80	dynamic
-../Core/Src/signal_processing.c:43:6:applyHannWindow	40	static

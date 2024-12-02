@@ -10,7 +10,7 @@
 
 #include "mic_input.h"
 
-float clip = 500.0f;
+float clip = 2000.0f;
 
 void mic_DMASampleBuffer(DFSDM_Filter_HandleTypeDef *hdfsdm_filter, int32_t *pData, uint32_t Length){
 	HAL_DFSDM_FilterRegularStart_DMA(hdfsdm_filter, pData, Length);
@@ -26,8 +26,9 @@ float limit_val(float input) {
 
 
 //needed to remove low freq information thats messing everything up
-void mic_hiPassSignal(int32_t *interim_buffer, float32_t *good_buffer, int good_buffer_length) {
-    // Filter coefficients for a 50 Hz high-pass filter with a 48 kHz sample rate
+void mic_process(int32_t *interim_buffer, float32_t *good_buffer, int good_buffer_length) {
+
+	// Filter coefficients for a 50 Hz high-pass filter with a 48 kHz sample rate
     float alpha = (2 * M_PI * 50) / (48000 + 2 * M_PI * 50);
     float alphinv = 1.0f / (1.0f + (48000 / (2 * M_PI * 2000)));
 
@@ -53,7 +54,6 @@ void mic_hiPassSignal(int32_t *interim_buffer, float32_t *good_buffer, int good_
 
     //lowpass
     prev_output = 0.0f;
-
     for (int i = 0; i < good_buffer_length; i++) {
     	float current_input = good_buffer[i];
     	float current_output = alphinv * current_input + (1 - alphinv) * prev_output;
@@ -66,6 +66,9 @@ void mic_hiPassSignal(int32_t *interim_buffer, float32_t *good_buffer, int good_
         prev_output = current_output;
 
     }
+
+    //kalman
+    kalmanFilter(good_buffer, good_buffer, good_buffer_length);
 }
 
 

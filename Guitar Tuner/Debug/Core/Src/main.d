@@ -38,10 +38,9 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
  ../Core/Inc/global_header.h ../Core/Inc/arm_math.h \
- ../Drivers/CMSIS/Include/cmsis_compiler.h \
- ../Core/Inc/signal_processing.h ../Core/Inc/global_header.h \
- ../Core/Inc/input_jack.h ../Core/Inc/mic_input.h \
- ../Core/Inc/ear_tuning.h
+ ../Drivers/CMSIS/Include/cmsis_compiler.h ../Core/Inc/mic_input.h \
+ ../Core/Inc/global_header.h ../Core/Inc/ear_tuning.h \
+ ../Core/Inc/kalmanFilter_CMSIS.h ../Core/Inc/guitar_string.h
 ../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
@@ -84,8 +83,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/global_header.h:
 ../Core/Inc/arm_math.h:
 ../Drivers/CMSIS/Include/cmsis_compiler.h:
-../Core/Inc/signal_processing.h:
-../Core/Inc/global_header.h:
-../Core/Inc/input_jack.h:
 ../Core/Inc/mic_input.h:
+../Core/Inc/global_header.h:
 ../Core/Inc/ear_tuning.h:
+../Core/Inc/kalmanFilter_CMSIS.h:
+../Core/Inc/guitar_string.h:
