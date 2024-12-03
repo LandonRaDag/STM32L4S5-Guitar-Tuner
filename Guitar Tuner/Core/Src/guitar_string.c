@@ -6,27 +6,59 @@
  */
 #include <guitar_string.h>
 
-GuitarString createGuitarString(int number, float frequency, float targetFrequency, const char* note) {
-    GuitarString string = {number, frequency, targetFrequency, note};
+GuitarString createGuitarString(int number, float frequency, float targetFrequency, const char* note, TuningOffset tuning_offset) {
+    GuitarString string = {number, frequency, targetFrequency, note, tuning_offset};
     return string;
 }
 
 void initializeGuitarStrings(GuitarString strings[], GuitarString** currentString) {
 
-    strings[0] = createGuitarString(0, 82.41, 82.41, "E2");  // Low E
-    strings[1] = createGuitarString(1, 110.00, 110.00, "A2");
-    strings[2] = createGuitarString(2, 146.83, 146.83, "D3");
-    strings[3] = createGuitarString(3, 196.00, 196.00, "G3");
-    strings[4] = createGuitarString(4, 246.94, 246.94, "B3");
-    strings[5] = createGuitarString(5, 329.63, 329.63, "E4");  // High E
+    strings[0] = createGuitarString(0, 82.41, 82.41, "E2", ON_PITCH);  // Low E
+    strings[1] = createGuitarString(1, 110.00, 110.00, "A2", ON_PITCH);
+    strings[2] = createGuitarString(2, 146.83, 146.83, "D3", ON_PITCH);
+    strings[3] = createGuitarString(3, 196.00, 196.00, "G3", ON_PITCH);
+    strings[4] = createGuitarString(4, 246.94, 246.94, "B3", ON_PITCH);
+    strings[5] = createGuitarString(5, 329.63, 329.63, "E4", ON_PITCH);  // High E
 
     // Default to the first string (low E in this case)
     *currentString = &strings[0];
 }
 
-float calculateTuningOffset(const GuitarString* string) {
-    return string->frequency - string->targetFrequency;
+void calculateTuningOffset(GuitarString* string, char* msg, size_t msg_size) {
+    float diff = string->frequency - string->targetFrequency;
+    const char* arrow_prefix = "";
+    const char* arrow_suffix = "";
+
+    // Determine tuning offset and corresponding arrows
+    if (diff < -5.0) {
+        string->tuning_offset = VERY_FLAT;
+        arrow_prefix = ">>>";  // Very flat
+    } else if (diff < -2.0) {
+        string->tuning_offset = FLAT;
+        arrow_prefix = ">>";   // Flat
+    } else if (diff < -0.5) {
+        string->tuning_offset = SLIGHTLY_FLAT;
+        arrow_prefix = ">";    // Slightly flat
+    } else if (diff <= 0.5) {
+        string->tuning_offset = ON_PITCH;
+        arrow_prefix = ">";
+        arrow_suffix = "< In tune!";
+    } else if (diff <= 2.0) {
+        string->tuning_offset = SLIGHTLY_SHARP;
+        arrow_suffix = "<";    // Slightly sharp
+    } else if (diff <= 5.0) {
+        string->tuning_offset = SHARP;
+        arrow_suffix = "<<";   // Sharp
+    } else {
+        string->tuning_offset = VERY_SHARP;
+        arrow_suffix = "<<<";  // Very sharp
+    }
+
+    // Format the message with arrows
+    snprintf(msg, msg_size, "%s%s%s\r\n", arrow_prefix, string->note, arrow_suffix);
 }
+
+
 
 void switchString(GuitarString strings[], GuitarString** currentString) {
 

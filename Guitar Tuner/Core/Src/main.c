@@ -70,10 +70,12 @@ float32_t mic_out[BUFFER_SIZE];
 
 GuitarString strings[6];
 GuitarString *currString;
-int process = 0;
+int bufferFull = 0;
+int playSound = 0;
 
 int UART = 0;
-char msg[100];
+#define MSG_SIZE 100
+char msg[MSG_SIZE];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -94,22 +96,23 @@ static void MX_DFSDM1_Init(void);
 void toggleMode() {
 	if (current_mode == MODE_MICROPHONE) {
 		// Switch to ear tuning mode
-		process = 1;
+
 		current_mode = MODE_EAR_TUNING;
 		HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
-
+		playSound = 1;
 		sprintf(msg, "Current mode: Ear Tuning\r\n");
 		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+		sprintf(msg, "Playing string %d (%s).\r\n", currString->number, currString->note);
+		HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 
 
 	} else {
-		process = 0;
-		HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
-		current_mode = MODE_MICROPHONE;  // Switch to microphone mode
-		HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
 
+		current_mode = MODE_MICROPHONE;  // Switch to microphone mode
+		//HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
 		sprintf(msg, "Current mode: Microphone Tuning\r\n");
 		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+		bufferFull = 1;
 	}
 }
 
@@ -126,7 +129,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 				sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
 				HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 				if (current_mode == MODE_EAR_TUNING){
-					process = 1;
+					playSound = 1;
 
 				}
 			}
@@ -139,7 +142,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 //this is called when the mic recording buffer is filled
 void myDMA_XferCpltCallback(DMA_HandleTypeDef *hdma){
 	if (hdma == &hdma_dfsdm1_flt2) {  // Check if the DMA is for DFSDM
-		process = 1;
+		bufferFull = 1;
 	}
 }
 
@@ -197,17 +200,18 @@ int main(void)
 		case MODE_EAR_TUNING:
 
 
-		if (process == 1){
+		if (playSound == 1){
 			HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
 			HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)sine_samples[currString->number], 1024, DAC_ALIGN_12B_R);
-			process = 0;
+			playSound = 0;
 		}
 
 			break;
 
 		case MODE_MICROPHONE:
+			HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);;
 
-			if (process == 1){
+			if (bufferFull == 1){
 
 				//mic process returns -25 in first buffer out index
 				// when rms amplitude below threshold (too quiet)
@@ -216,13 +220,14 @@ int main(void)
 				//threshold detection,
 				if (mic_out[0] != -25){
 					yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
-					sprintf(msg, "Predicted frequency: %f Hz \r\n", currString->frequency);
+					calculateTuningOffset(currString, msg, MSG_SIZE);
+					//sprintf(msg, "Predicted frequency: %f Hz \r\n", currString->frequency);
 
 					HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
 				}
 				HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
 				HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
-				process = 0;
+				bufferFull = 0;
 			}
 
 			break;

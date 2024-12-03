@@ -1,5 +1,5 @@
 ../Core/Src/guitar_string.c:9:14:createGuitarString	1
 ../Core/Src/guitar_string.c:14:6:initializeGuitarStrings	1
-../Core/Src/guitar_string.c:27:7:calculateTuningOffset	1
-../Core/Src/guitar_string.c:31:6:switchString	3
-../Core/Src/guitar_string.c:47:6:yin_detect_frequency	9
+../Core/Src/guitar_string.c:27:6:calculateTuningOffset	7
+../Core/Src/guitar_string.c:63:6:switchString	3
+../Core/Src/guitar_string.c:79:6:yin_detect_frequency	9
