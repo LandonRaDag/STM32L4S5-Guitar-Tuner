@@ -26,6 +26,8 @@ void initializeGuitarStrings(GuitarString strings[], GuitarString** currentStrin
 
 void calculateTuningOffset(GuitarString* string, char* msg, size_t msg_size) {
     float diff = string->frequency - string->targetFrequency;
+
+    const char* tuning_msg = "Tuning: ";
     const char* arrow_prefix = "";
     const char* arrow_suffix = "";
 
@@ -55,7 +57,7 @@ void calculateTuningOffset(GuitarString* string, char* msg, size_t msg_size) {
     }
 
     // Format the message with arrows
-    snprintf(msg, msg_size, "%s%s%s\r\n", arrow_prefix, string->note, arrow_suffix);
+    snprintf(msg, msg_size, "%s%s%s%s\r\n", tuning_msg, arrow_prefix, string->note, arrow_suffix);
 }
 
 

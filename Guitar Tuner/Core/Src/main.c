@@ -184,11 +184,6 @@ int main(void)
   MX_DFSDM1_Init();
   /* USER CODE BEGIN 2 */
 	initializeGuitarStrings(strings, &currString);
-
-	//welcome message
-	sprintf(msg, "Hold blue button to begin in ear tuner, hold again for mic. Tap to switch strings\r\n");
-	HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-
 	HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
 	HAL_TIM_Base_Start_IT(&htim2);
 	/* USER CODE END 2 */
