@@ -13,12 +13,12 @@ GuitarString createGuitarString(int number, float frequency, float targetFrequen
 
 void initializeGuitarStrings(GuitarString strings[], GuitarString** currentString) {
 
-    strings[0] = createGuitarString(0, 82.41, 82.41, "E");  // Low E
-    strings[1] = createGuitarString(1, 110.00, 110.00, "A");
-    strings[2] = createGuitarString(2, 146.83, 146.83, "D");
-    strings[3] = createGuitarString(3, 196.00, 196.00, "G");
-    strings[4] = createGuitarString(4, 246.94, 246.94, "B");
-    strings[5] = createGuitarString(5, 329.63, 329.63, "e");  // High E
+    strings[0] = createGuitarString(0, 82.41, 82.41, "E2");  // Low E
+    strings[1] = createGuitarString(1, 110.00, 110.00, "A2");
+    strings[2] = createGuitarString(2, 146.83, 146.83, "D3");
+    strings[3] = createGuitarString(3, 196.00, 196.00, "G3");
+    strings[4] = createGuitarString(4, 246.94, 246.94, "B3");
+    strings[5] = createGuitarString(5, 329.63, 329.63, "E4");  // High E
 
     // Default to the first string (low E in this case)
     *currentString = &strings[0];
