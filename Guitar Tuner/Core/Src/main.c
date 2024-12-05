@@ -40,9 +40,6 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-ADC_HandleTypeDef hadc1;
-DMA_HandleTypeDef hdma_adc1;
-
 DAC_HandleTypeDef hdac1;
 DMA_HandleTypeDef hdma_dac1_ch1;
 
@@ -50,40 +47,104 @@ DFSDM_Filter_HandleTypeDef hdfsdm1_filter2;
 DFSDM_Channel_HandleTypeDef hdfsdm1_channel2;
 DMA_HandleTypeDef hdma_dfsdm1_flt2;
 
-OPAMP_HandleTypeDef hopamp1;
-
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
+typedef enum {
+	MODE_EAR_TUNING,
+	MODE_MICROPHONE,
+} Mode;
 
-uint32_t adc_rec[BUFFER_SIZE];  // Define the buffer to hold ADC samples (16-bit values
-float32_t adc_out[BUFFER_SIZE];
+volatile Mode current_mode = MODE_MICROPHONE;// Default mode
+
+uint32_t button_press_time = 0;   // Time when the button was pressed
+uint32_t button_release_time = 0;  // Time when the button was released
+
+//input buffers
 #define MIC_REC_SIZE (BUFFER_SIZE + 200)
 int32_t mic_rec[MIC_REC_SIZE];
 float32_t mic_out[BUFFER_SIZE];
-float pred_freq = 0.0f;
 
+GuitarString strings[6];
+GuitarString *currString;
+int bufferFull = 0;
+int playSound = 0;
+
+int UART = 0;
+#define MSG_SIZE 100
+char msg[MSG_SIZE];
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
-static void MX_ADC1_Init(void);
 static void MX_DAC1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_DFSDM1_Init(void);
-static void MX_OPAMP1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+void toggleMode() {
+	if (current_mode == MODE_MICROPHONE) {
+		// Switch to ear tuning mode
+
+		current_mode = MODE_EAR_TUNING;
+		HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+		playSound = 1;
+		sprintf(msg, "Current mode: Ear Tuning\r\n");
+		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+		sprintf(msg, "Playing string %d (%s).\r\n", currString->number, currString->note);
+		HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+
+	} else {
+
+		current_mode = MODE_MICROPHONE;  // Switch to microphone mode
+		//HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+		sprintf(msg, "Current mode: Microphone Tuning\r\n");
+		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+		bufferFull = 1;
+	}
+}
+
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
+	if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
+
+		//CHECK BUTTON RELEASE
+		if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET) {  // Button is released
+			button_release_time = HAL_GetTick();
+			if (button_release_time - button_press_time >= 1000) {
+				toggleMode();  // Button was held long enough
+			} else {
+				switchString(strings, &currString);
+				sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
+				HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+				if (current_mode == MODE_EAR_TUNING){
+					playSound = 1;
+
+				}
+			}
+		} else {  // Button is pressed
+			button_press_time = HAL_GetTick();
+		}
+	}
+}
+
+//this is called when the mic recording buffer is filled
+void myDMA_XferCpltCallback(DMA_HandleTypeDef *hdma){
+	if (hdma == &hdma_dfsdm1_flt2) {  // Check if the DMA is for DFSDM
+		bufferFull = 1;
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -117,46 +178,56 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_ADC1_Init();
   MX_DAC1_Init();
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   MX_DFSDM1_Init();
-  MX_OPAMP1_Init();
   /* USER CODE BEGIN 2 */
-
-  HAL_OPAMP_Start(&hopamp1);
-
-	hdma_adc1.Init.Mode = DMA_CIRCULAR;
-	//inputJack_Init(&hadc1, &htim2);
-	//inputJack_DMASampleBuffer(&hadc1, adc_buffer, BUFFER_SIZE);
-
-	HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
-	HAL_Delay(50);
-	mic_hiPassSignal(mic_rec, mic_out, BUFFER_SIZE);
-	HAL_Delay(50);
-
-	char msg[50];
-	pred_freq = yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE);
-	sprintf(msg, "Predicted frequency : %f  Hz\r\n", pred_freq);
-	HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-  /* USER CODE END 2 */
+	initializeGuitarStrings(strings, &currString);
+	HAL_DAC_Start(&hdac1, DAC_CHANNEL_1);
+	HAL_TIM_Base_Start_IT(&htim2);
+	/* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	while (1)
-	{
+	while (1){
+		switch (current_mode) {
+		case MODE_EAR_TUNING:
 
-		for (int i = 0; i < BUFFER_SIZE; i++) {
-			// Format the message with the current ADC value
-			sprintf(msg, "mic[%d],%f\r\n", i, mic_out[i]);
 
-			// Send the message over UART
-			HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-
+		if (playSound == 1){
+			HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
+			HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)sine_samples[currString->number], 1024, DAC_ALIGN_12B_R);
+			playSound = 0;
 		}
 
+			break;
 
+		case MODE_MICROPHONE:
+			HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);;
+
+			if (bufferFull == 1){
+
+				//mic process returns -25 in first buffer out index
+				// when rms amplitude below threshold (too quiet)
+				mic_process(mic_rec, mic_out, BUFFER_SIZE);
+
+				//threshold detection,
+				if (mic_out[0] != -25){
+					yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
+					calculateTuningOffset(currString, msg, MSG_SIZE);
+					//sprintf(msg, "Predicted frequency: %f Hz \r\n", currString->frequency);
+
+					HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+				}
+				HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+				HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+				bufferFull = 0;
+			}
+
+			break;
+
+		}
 
     /* USER CODE END WHILE */
 
@@ -213,64 +284,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief ADC1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_ADC1_Init(void)
-{
-
-  /* USER CODE BEGIN ADC1_Init 0 */
-
-  /* USER CODE END ADC1_Init 0 */
-
-  ADC_ChannelConfTypeDef sConfig = {0};
-
-  /* USER CODE BEGIN ADC1_Init 1 */
-	__HAL_RCC_ADC_CLK_ENABLE();
-  /* USER CODE END ADC1_Init 1 */
-
-  /** Common config
-  */
-  hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV2;
-  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
-  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.ScanConvMode = ADC_SCAN_DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
-  hadc1.Init.LowPowerAutoWait = DISABLE;
-  hadc1.Init.ContinuousConvMode = ENABLE;
-  hadc1.Init.NbrOfConversion = 1;
-  hadc1.Init.DiscontinuousConvMode = DISABLE;
-  hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIG_T2_TRGO;
-  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
-  hadc1.Init.DMAContinuousRequests = ENABLE;
-  hadc1.Init.Overrun = ADC_OVR_DATA_OVERWRITTEN;
-  hadc1.Init.OversamplingMode = DISABLE;
-  if (HAL_ADC_Init(&hadc1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-
-  /** Configure Regular Channel
-  */
-  sConfig.Channel = ADC_CHANNEL_2;
-  sConfig.Rank = ADC_REGULAR_RANK_1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
-  sConfig.SingleDiff = ADC_SINGLE_ENDED;
-  sConfig.OffsetNumber = ADC_OFFSET_NONE;
-  sConfig.Offset = 0;
-  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN ADC1_Init 2 */
-
-  /* USER CODE END ADC1_Init 2 */
-
 }
 
 /**
@@ -355,7 +368,7 @@ static void MX_DFSDM1_Init(void)
   hdfsdm1_channel2.Init.Awd.FilterOrder = DFSDM_CHANNEL_FASTSINC_ORDER;
   hdfsdm1_channel2.Init.Awd.Oversampling = 1;
   hdfsdm1_channel2.Init.Offset = 0;
-  hdfsdm1_channel2.Init.RightBitShift = 8;
+  hdfsdm1_channel2.Init.RightBitShift = 4;
   if (HAL_DFSDM_ChannelInit(&hdfsdm1_channel2) != HAL_OK)
   {
     Error_Handler();
@@ -367,37 +380,6 @@ static void MX_DFSDM1_Init(void)
   /* USER CODE BEGIN DFSDM1_Init 2 */
 
   /* USER CODE END DFSDM1_Init 2 */
-
-}
-
-/**
-  * @brief OPAMP1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_OPAMP1_Init(void)
-{
-
-  /* USER CODE BEGIN OPAMP1_Init 0 */
-
-  /* USER CODE END OPAMP1_Init 0 */
-
-  /* USER CODE BEGIN OPAMP1_Init 1 */
-
-  /* USER CODE END OPAMP1_Init 1 */
-  hopamp1.Instance = OPAMP1;
-  hopamp1.Init.PowerSupplyRange = OPAMP_POWERSUPPLY_LOW;
-  hopamp1.Init.Mode = OPAMP_FOLLOWER_MODE;
-  hopamp1.Init.NonInvertingInput = OPAMP_NONINVERTINGINPUT_IO0;
-  hopamp1.Init.PowerMode = OPAMP_POWERMODE_LOWPOWER;
-  hopamp1.Init.UserTrimming = OPAMP_TRIMMING_FACTORY;
-  if (HAL_OPAMP_Init(&hopamp1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN OPAMP1_Init 2 */
-
-  /* USER CODE END OPAMP1_Init 2 */
 
 }
 
@@ -508,9 +490,6 @@ static void MX_DMA_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-  /* DMA1_Channel2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel2_IRQn);
   /* DMA1_Channel3_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel3_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel3_IRQn);
@@ -536,9 +515,13 @@ static void MX_GPIO_Init(void)
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

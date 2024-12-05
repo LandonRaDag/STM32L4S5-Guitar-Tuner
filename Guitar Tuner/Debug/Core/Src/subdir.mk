@@ -5,10 +5,11 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 C_SRCS += \
-../Core/Src/input_jack.c \
+../Core/Src/ear_tuning.c \
+../Core/Src/guitar_string.c \
+../Core/Src/kalmanFilter_CMSIS.c \
 ../Core/Src/main.c \
 ../Core/Src/mic_input.c \
-../Core/Src/signal_processing.c \
 ../Core/Src/stm32l4xx_hal_msp.c \
 ../Core/Src/stm32l4xx_it.c \
 ../Core/Src/syscalls.c \
@@ -16,10 +17,11 @@ C_SRCS += \
 ../Core/Src/system_stm32l4xx.c 
 
 OBJS += \
-./Core/Src/input_jack.o \
+./Core/Src/ear_tuning.o \
+./Core/Src/guitar_string.o \
+./Core/Src/kalmanFilter_CMSIS.o \
 ./Core/Src/main.o \
 ./Core/Src/mic_input.o \
-./Core/Src/signal_processing.o \
 ./Core/Src/stm32l4xx_hal_msp.o \
 ./Core/Src/stm32l4xx_it.o \
 ./Core/Src/syscalls.o \
@@ -27,10 +29,11 @@ OBJS += \
 ./Core/Src/system_stm32l4xx.o 
 
 C_DEPS += \
-./Core/Src/input_jack.d \
+./Core/Src/ear_tuning.d \
+./Core/Src/guitar_string.d \
+./Core/Src/kalmanFilter_CMSIS.d \
 ./Core/Src/main.d \
 ./Core/Src/mic_input.d \
-./Core/Src/signal_processing.d \
 ./Core/Src/stm32l4xx_hal_msp.d \
 ./Core/Src/stm32l4xx_it.d \
 ./Core/Src/syscalls.d \
@@ -45,7 +48,7 @@ Core/Src/%.o Core/Src/%.su Core/Src/%.cyclo: ../Core/Src/%.c Core/Src/subdir.mk
 clean: clean-Core-2f-Src
 
 clean-Core-2f-Src:
-	-$(RM) ./Core/Src/input_jack.cyclo ./Core/Src/input_jack.d ./Core/Src/input_jack.o ./Core/Src/input_jack.su ./Core/Src/main.cyclo ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/mic_input.cyclo ./Core/Src/mic_input.d ./Core/Src/mic_input.o ./Core/Src/mic_input.su ./Core/Src/signal_processing.cyclo ./Core/Src/signal_processing.d ./Core/Src/signal_processing.o ./Core/Src/signal_processing.su ./Core/Src/stm32l4xx_hal_msp.cyclo ./Core/Src/stm32l4xx_hal_msp.d ./Core/Src/stm32l4xx_hal_msp.o ./Core/Src/stm32l4xx_hal_msp.su ./Core/Src/stm32l4xx_it.cyclo ./Core/Src/stm32l4xx_it.d ./Core/Src/stm32l4xx_it.o ./Core/Src/stm32l4xx_it.su ./Core/Src/syscalls.cyclo ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.cyclo ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32l4xx.cyclo ./Core/Src/system_stm32l4xx.d ./Core/Src/system_stm32l4xx.o ./Core/Src/system_stm32l4xx.su
+	-$(RM) ./Core/Src/ear_tuning.cyclo ./Core/Src/ear_tuning.d ./Core/Src/ear_tuning.o ./Core/Src/ear_tuning.su ./Core/Src/guitar_string.cyclo ./Core/Src/guitar_string.d ./Core/Src/guitar_string.o ./Core/Src/guitar_string.su ./Core/Src/kalmanFilter_CMSIS.cyclo ./Core/Src/kalmanFilter_CMSIS.d ./Core/Src/kalmanFilter_CMSIS.o ./Core/Src/kalmanFilter_CMSIS.su ./Core/Src/main.cyclo ./Core/Src/main.d ./Core/Src/main.o ./Core/Src/main.su ./Core/Src/mic_input.cyclo ./Core/Src/mic_input.d ./Core/Src/mic_input.o ./Core/Src/mic_input.su ./Core/Src/stm32l4xx_hal_msp.cyclo ./Core/Src/stm32l4xx_hal_msp.d ./Core/Src/stm32l4xx_hal_msp.o ./Core/Src/stm32l4xx_hal_msp.su ./Core/Src/stm32l4xx_it.cyclo ./Core/Src/stm32l4xx_it.d ./Core/Src/stm32l4xx_it.o ./Core/Src/stm32l4xx_it.su ./Core/Src/syscalls.cyclo ./Core/Src/syscalls.d ./Core/Src/syscalls.o ./Core/Src/syscalls.su ./Core/Src/sysmem.cyclo ./Core/Src/sysmem.d ./Core/Src/sysmem.o ./Core/Src/sysmem.su ./Core/Src/system_stm32l4xx.cyclo ./Core/Src/system_stm32l4xx.d ./Core/Src/system_stm32l4xx.o ./Core/Src/system_stm32l4xx.su
 
 .PHONY: clean-Core-2f-Src
 
