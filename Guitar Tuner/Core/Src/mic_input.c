@@ -69,7 +69,7 @@ void mic_process(int32_t *interim_buffer, float32_t *good_buffer, int good_buffe
 
         // Store the filtered output
         good_buffer[i] = (float)limit_val(current_output) / clip;
-
+    	//good_buffer[i] = current_output;
         // Update previous input and output for the next iteration
         prev_input = current_input;
         prev_output = current_output;
@@ -78,6 +78,7 @@ void mic_process(int32_t *interim_buffer, float32_t *good_buffer, int good_buffe
 
     //kalman
     kalmanFilter(good_buffer, good_buffer, good_buffer_length);
+
 }
 
 
