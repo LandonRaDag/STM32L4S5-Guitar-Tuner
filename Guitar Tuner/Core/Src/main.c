@@ -53,6 +53,7 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 
+//Mode definitions
 typedef enum {
 	MODE_EAR_TUNING,
 	MODE_MICROPHONE,
@@ -60,19 +61,24 @@ typedef enum {
 
 volatile Mode current_mode = MODE_MICROPHONE;// Default mode
 
+//button timers for GPIO input
 uint32_t button_press_time = 0;   // Time when the button was pressed
 uint32_t button_release_time = 0;  // Time when the button was released
 
-//input buffers
+//mic input buffers
 #define MIC_REC_SIZE (BUFFER_SIZE + 200)
-int32_t mic_rec[MIC_REC_SIZE];
-float32_t mic_out[BUFFER_SIZE];
+int32_t mic_rec[MIC_REC_SIZE];	//recording buffer
+float32_t mic_out[BUFFER_SIZE]; //processed buffer
 
+//Guitar strings
 GuitarString strings[6];
 GuitarString *currString;
-int bufferFull = 0;
-int playSound = 0;
 
+//Flags for while loops
+int bufferFull = 0;	//triggered when MA to the recording buffer is full
+int playSound = 0;	//triggered when circular dma for the speaker has to start/change
+
+//UART messages initialization
 int UART = 0;
 #define MSG_SIZE 100
 char msg[MSG_SIZE];
@@ -94,49 +100,64 @@ static void MX_DFSDM1_Init(void);
 /* USER CODE BEGIN 0 */
 
 void toggleMode() {
-	if (current_mode == MODE_MICROPHONE) {
-		// Switch to ear tuning mode
+    if (current_mode == MODE_MICROPHONE) {
+        // Switch to ear tuning mode
 
-		current_mode = MODE_EAR_TUNING;
-		HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
-		playSound = 1;
-		sprintf(msg, "Current mode: Ear Tuning\r\n");
-		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-		sprintf(msg, "Playing string %d (%s).\r\n", currString->number, currString->note);
-		HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+        current_mode = MODE_EAR_TUNING;
 
+        // Stop microphone input processing
+        HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
 
-	} else {
+        playSound = 1;  // Enable sound output for ear tuning
 
-		current_mode = MODE_MICROPHONE;  // Switch to microphone mode
-		//HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
-		sprintf(msg, "Current mode: Microphone Tuning\r\n");
-		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-		bufferFull = 1;
-	}
+        // Notify the user of the current mode
+        sprintf(msg, "Current mode: Ear Tuning\r\n");
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+        // Notify which string is being played
+        sprintf(msg, "Playing string %d (%s).\r\n", currString->number, currString->note);
+        HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+    } else {
+        // Switch to microphone mode
+        current_mode = MODE_MICROPHONE;
+
+        // Notify the user of the current mode
+        sprintf(msg, "Current mode: Microphone Tuning\r\n");
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+        bufferFull = 1;  // Reset or signal the buffer state
+    }
 }
 
+//Called on falling and rising edge of button press (so press down and release)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
-	if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
+    if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
 
-		//CHECK BUTTON RELEASE
-		if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET) {  // Button is released
-			button_release_time = HAL_GetTick();
-			if (button_release_time - button_press_time >= 1000) {
-				toggleMode();  // Button was held long enough
-			} else {
-				switchString(strings, &currString);
-				sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
-				HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-				if (current_mode == MODE_EAR_TUNING){
-					playSound = 1;
+        // Check if the button is released
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET) {  // Button is released
+            button_release_time = HAL_GetTick();
 
-				}
-			}
-		} else {  // Button is pressed
-			button_press_time = HAL_GetTick();
-		}
-	}
+            // Check if the button was held for at least 1000 ms
+            if (button_release_time - button_press_time >= 1000) {
+                toggleMode();  // Switch modes when the button is held long enough
+            } else {
+                // Switch to the next string
+                switchString(strings, &currString);
+
+                // Notify the user of the new string
+                sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
+                HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+
+                // Play the sound of the selected string if in ear tuning mode
+                if (current_mode == MODE_EAR_TUNING) {
+                    playSound = 1;
+                }
+            }
+        } else {  // Button is pressed
+            button_press_time = HAL_GetTick();  // Record the time the button was pressed
+        }
+    }
 }
 
 //this is called when the mic recording buffer is filled
@@ -192,42 +213,56 @@ int main(void)
   /* USER CODE BEGIN WHILE */
 	while (1){
 		switch (current_mode) {
-		case MODE_EAR_TUNING:
+		    case MODE_EAR_TUNING:
+		        // Handle ear tuning mode
+		        if (playSound == 1) {
+		            // Stop any currently playing sound on DAC channel 1
+		            HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
 
+		            // Start playing the sine wave for the current string
+		            HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1,
+		                               (uint32_t*)sine_samples[currString->number],
+		                               1024,
+		                               DAC_ALIGN_12B_R);
 
-		if (playSound == 1){
-			HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
-			HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)sine_samples[currString->number], 1024, DAC_ALIGN_12B_R);
-			playSound = 0;
+		            playSound = 0;  // Reset the playSound flag
+		        }
+		        break;
+
+		    case MODE_MICROPHONE:
+		        // Handle microphone mode
+		        HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);  // Ensure DAC output is stopped
+
+		        if (bufferFull == 1) {
+		            // Process microphone data
+		            // mic_process sets mic_out[0] to -25 when RMS amplitude is below the threshold
+		            mic_process(mic_rec, mic_out, BUFFER_SIZE);
+
+		            // Check if the processed microphone data exceeds the amplitude threshold
+		            if (mic_out[0] != -25) {
+		                // Detect the frequency using YIN algorithm
+		                yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
+
+		                // Calculate tuning offset based on the detected frequency
+		                calculateTuningOffset(currString, msg, MSG_SIZE);
+
+		                // Transmit the tuning offset or frequency information
+		                HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+		            }
+
+		            // Restart microphone data collection for the next cycle
+		            HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+		            HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+
+		            bufferFull = 0;  // Reset the bufferFull flag
+		        }
+		        break;
+
+		    default:
+
+		        break;
 		}
 
-			break;
-
-		case MODE_MICROPHONE:
-			HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);;
-
-			if (bufferFull == 1){
-
-				//mic process returns -25 in first buffer out index
-				// when rms amplitude below threshold (too quiet)
-				mic_process(mic_rec, mic_out, BUFFER_SIZE);
-
-				//threshold detection,
-				if (mic_out[0] != -25){
-					yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
-					calculateTuningOffset(currString, msg, MSG_SIZE);
-					//sprintf(msg, "Predicted frequency: %f Hz \r\n", currString->frequency);
-
-					HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
-				}
-				HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
-				HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
-				bufferFull = 0;
-			}
-
-			break;
-
-		}
 
     /* USER CODE END WHILE */
 
