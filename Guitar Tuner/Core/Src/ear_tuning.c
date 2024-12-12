@@ -5,7 +5,7 @@
 
 #include "ear_tuning.h"
 
-
+//samples of sine waves for DAC speaker
 uint32_t sine_samples[6][1024] = {
 
 		//SAMPLES of E2 = 82.41 Hz

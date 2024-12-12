@@ -27,25 +27,25 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000030  00000000  00000000  000121dc  2**0
                   CONTENTS, READONLY
- 12 .debug_info   00018b55  00000000  00000000  0001220c  2**0
+ 12 .debug_info   00018b5e  00000000  00000000  0001220c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 000031e2  00000000  00000000  0002ad61  2**0
+ 13 .debug_abbrev 000031e8  00000000  00000000  0002ad6a  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 00001568  00000000  00000000  0002df48  2**3
+ 14 .debug_aranges 00001568  00000000  00000000  0002df58  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_macro  0002db7c  00000000  00000000  0002f4b0  2**0
+ 15 .debug_macro  0002db7c  00000000  00000000  0002f4c0  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_line   0001ae40  00000000  00000000  0005d02c  2**0
+ 16 .debug_line   0001ae4e  00000000  00000000  0005d03c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_str    001122c3  00000000  00000000  00077e6c  2**0
+ 17 .debug_str    001122c3  00000000  00000000  00077e8a  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .comment      00000043  00000000  00000000  0018a12f  2**0
+ 18 .comment      00000043  00000000  00000000  0018a14d  2**0
                   CONTENTS, READONLY
- 19 .debug_rnglists 0000108c  00000000  00000000  0018a172  2**0
+ 19 .debug_rnglists 0000108c  00000000  00000000  0018a190  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 20 .debug_frame  00006c20  00000000  00000000  0018b200  2**2
+ 20 .debug_frame  00006c20  00000000  00000000  0018b21c  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 0000005b  00000000  00000000  00191e20  2**0
+ 21 .debug_line_str 0000005b  00000000  00000000  00191e3c  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -1201,12 +1201,12 @@ Disassembly of section .text:
  8000ec6:	bf00      	nop
 
 08000ec8 <createGuitarString>:
- *  Created on: Dec 2, 2024
- *      Author: Landon Ra Dagenais
  */
 #include <guitar_string.h>
 
-GuitarString createGuitarString(int number, float frequency, float targetFrequency, const char* note, TuningOffset tuning_offset) {
+// Creates a GuitarString structure with the provided attributes
+GuitarString createGuitarString(int number, float frequency, float targetFrequency,
+		const char* note, TuningOffset tuning_offset) {
  8000ec8:	b4b0      	push	{r4, r5, r7}
  8000eca:	b08d      	sub	sp, #52	@ 0x34
  8000ecc:	af00      	add	r7, sp, #0
@@ -1216,7 +1216,8 @@ GuitarString createGuitarString(int number, float frequency, float targetFrequen
  8000ed6:	edc7 0a02 	vstr	s1, [r7, #8]
  8000eda:	607a      	str	r2, [r7, #4]
  8000edc:	70fb      	strb	r3, [r7, #3]
-    GuitarString string = {number, frequency, targetFrequency, note, tuning_offset};
+	// Initialize and return a GuitarString struct
+	GuitarString string = {number, frequency, targetFrequency, note, tuning_offset};
  8000ede:	693b      	ldr	r3, [r7, #16]
  8000ee0:	61fb      	str	r3, [r7, #28]
  8000ee2:	68fb      	ldr	r3, [r7, #12]
@@ -1227,7 +1228,7 @@ GuitarString createGuitarString(int number, float frequency, float targetFrequen
  8000eec:	62bb      	str	r3, [r7, #40]	@ 0x28
  8000eee:	78fb      	ldrb	r3, [r7, #3]
  8000ef0:	f887 302c 	strb.w	r3, [r7, #44]	@ 0x2c
-    return string;
+	return string;
  8000ef4:	697b      	ldr	r3, [r7, #20]
  8000ef6:	461d      	mov	r5, r3
  8000ef8:	f107 041c 	add.w	r4, r7, #28
@@ -1245,6 +1246,7 @@ GuitarString createGuitarString(int number, float frequency, float targetFrequen
 
 08000f10 <initializeGuitarStrings>:
 
+// Initializes an array of GuitarString objects and sets the default current string
 void initializeGuitarStrings(GuitarString strings[], GuitarString** currentString) {
  8000f10:	b5b0      	push	{r4, r5, r7, lr}
  8000f12:	b088      	sub	sp, #32
@@ -1252,7 +1254,8 @@ void initializeGuitarStrings(GuitarString strings[], GuitarString** currentStrin
  8000f16:	61f8      	str	r0, [r7, #28]
  8000f18:	61b9      	str	r1, [r7, #24]
 
-    strings[0] = createGuitarString(0, 82.41, 82.41, "E2", ON_PITCH);  // Low E
+	// Define the standard tuning for a 6-string guitar
+	strings[0] = createGuitarString(0, 82.41, 82.41, "E2", ON_PITCH);  // Low E
  8000f1a:	69fc      	ldr	r4, [r7, #28]
  8000f1c:	4638      	mov	r0, r7
  8000f1e:	2303      	movs	r3, #3
@@ -1267,7 +1270,7 @@ void initializeGuitarStrings(GuitarString strings[], GuitarString** currentStrin
  8000f36:	c50f      	stmia	r5!, {r0, r1, r2, r3}
  8000f38:	6823      	ldr	r3, [r4, #0]
  8000f3a:	602b      	str	r3, [r5, #0]
-    strings[1] = createGuitarString(1, 110.00, 110.00, "A2", ON_PITCH);
+	strings[1] = createGuitarString(1, 110.00, 110.00, "A2", ON_PITCH);
  8000f3c:	69fb      	ldr	r3, [r7, #28]
  8000f3e:	f103 0414 	add.w	r4, r3, #20
  8000f42:	4638      	mov	r0, r7
@@ -1283,7 +1286,7 @@ void initializeGuitarStrings(GuitarString strings[], GuitarString** currentStrin
  8000f5c:	c50f      	stmia	r5!, {r0, r1, r2, r3}
  8000f5e:	6823      	ldr	r3, [r4, #0]
  8000f60:	602b      	str	r3, [r5, #0]
-    strings[2] = createGuitarString(2, 146.83, 146.83, "D3", ON_PITCH);
+	strings[2] = createGuitarString(2, 146.83, 146.83, "D3", ON_PITCH);
  8000f62:	69fb      	ldr	r3, [r7, #28]
  8000f64:	f103 0428 	add.w	r4, r3, #40	@ 0x28
  8000f68:	4638      	mov	r0, r7
@@ -1299,7 +1302,7 @@ void initializeGuitarStrings(GuitarString strings[], GuitarString** currentStrin
  8000f82:	c50f      	stmia	r5!, {r0, r1, r2, r3}
  8000f84:	6823      	ldr	r3, [r4, #0]
  8000f86:	602b      	str	r3, [r5, #0]
-    strings[3] = createGuitarString(3, 196.00, 196.00, "G3", ON_PITCH);
+	strings[3] = createGuitarString(3, 196.00, 196.00, "G3", ON_PITCH);
  8000f88:	69fb      	ldr	r3, [r7, #28]
  8000f8a:	f103 043c 	add.w	r4, r3, #60	@ 0x3c
  8000f8e:	4638      	mov	r0, r7
@@ -1315,7 +1318,7 @@ void initializeGuitarStrings(GuitarString strings[], GuitarString** currentStrin
  8000fa8:	c50f      	stmia	r5!, {r0, r1, r2, r3}
  8000faa:	6823      	ldr	r3, [r4, #0]
  8000fac:	602b      	str	r3, [r5, #0]
-    strings[4] = createGuitarString(4, 246.94, 246.94, "B3", ON_PITCH);
+	strings[4] = createGuitarString(4, 246.94, 246.94, "B3", ON_PITCH);
  8000fae:	69fb      	ldr	r3, [r7, #28]
  8000fb0:	f103 0450 	add.w	r4, r3, #80	@ 0x50
  8000fb4:	4638      	mov	r0, r7
@@ -1331,7 +1334,7 @@ void initializeGuitarStrings(GuitarString strings[], GuitarString** currentStrin
  8000fce:	c50f      	stmia	r5!, {r0, r1, r2, r3}
  8000fd0:	6823      	ldr	r3, [r4, #0]
  8000fd2:	602b      	str	r3, [r5, #0]
-    strings[5] = createGuitarString(5, 329.63, 329.63, "E4", ON_PITCH);  // High E
+	strings[5] = createGuitarString(5, 329.63, 329.63, "E4", ON_PITCH);  // High E
  8000fd4:	69fb      	ldr	r3, [r7, #28]
  8000fd6:	f103 0464 	add.w	r4, r3, #100	@ 0x64
  8000fda:	4638      	mov	r0, r7
@@ -1348,8 +1351,8 @@ void initializeGuitarStrings(GuitarString strings[], GuitarString** currentStrin
  8000ff6:	6823      	ldr	r3, [r4, #0]
  8000ff8:	602b      	str	r3, [r5, #0]
 
-    // Default to the first string (low E in this case)
-    *currentString = &strings[0];
+	// Set the default current string to the first string (low E)
+	*currentString = &strings[0];
  8000ffa:	69bb      	ldr	r3, [r7, #24]
  8000ffc:	69fa      	ldr	r2, [r7, #28]
  8000ffe:	601a      	str	r2, [r3, #0]
@@ -1380,7 +1383,7 @@ void calculateTuningOffset(GuitarString* string, char* msg, size_t msg_size) {
  800103e:	60f8      	str	r0, [r7, #12]
  8001040:	60b9      	str	r1, [r7, #8]
  8001042:	607a      	str	r2, [r7, #4]
-    float diff = string->frequency - string->targetFrequency;
+	float diff = string->frequency - string->targetFrequency;
  8001044:	68fb      	ldr	r3, [r7, #12]
  8001046:	ed93 7a01 	vldr	s14, [r3, #4]
  800104a:	68fb      	ldr	r3, [r7, #12]
@@ -1388,116 +1391,116 @@ void calculateTuningOffset(GuitarString* string, char* msg, size_t msg_size) {
  8001050:	ee77 7a67 	vsub.f32	s15, s14, s15
  8001054:	edc7 7a05 	vstr	s15, [r7, #20]
 
-    const char* tuning_msg = "Tuning: ";
+	const char* tuning_msg = "Tuning: ";
  8001058:	4b3b      	ldr	r3, [pc, #236]	@ (8001148 <calculateTuningOffset+0x110>)
  800105a:	613b      	str	r3, [r7, #16]
-    const char* arrow_prefix = "";
+	const char* arrow_prefix = "";
  800105c:	4b3b      	ldr	r3, [pc, #236]	@ (800114c <calculateTuningOffset+0x114>)
  800105e:	61fb      	str	r3, [r7, #28]
-    const char* arrow_suffix = "";
+	const char* arrow_suffix = "";
  8001060:	4b3a      	ldr	r3, [pc, #232]	@ (800114c <calculateTuningOffset+0x114>)
  8001062:	61bb      	str	r3, [r7, #24]
 
-    // Determine tuning offset and corresponding arrows
-    if (diff < -5.0) {
+	// Determine tuning offset and corresponding arrows
+	if (diff < -5.0) {
  8001064:	edd7 7a05 	vldr	s15, [r7, #20]
  8001068:	eeb9 7a04 	vmov.f32	s14, #148	@ 0xc0a00000 -5.0
  800106c:	eef4 7ac7 	vcmpe.f32	s15, s14
  8001070:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  8001074:	d505      	bpl.n	8001082 <calculateTuningOffset+0x4a>
-        string->tuning_offset = VERY_FLAT;
+		string->tuning_offset = VERY_FLAT;
  8001076:	68fb      	ldr	r3, [r7, #12]
  8001078:	2200      	movs	r2, #0
  800107a:	741a      	strb	r2, [r3, #16]
-        arrow_prefix = ">>>";  // Very flat
+		arrow_prefix = ">>>";  // Very flat
  800107c:	4b34      	ldr	r3, [pc, #208]	@ (8001150 <calculateTuningOffset+0x118>)
  800107e:	61fb      	str	r3, [r7, #28]
  8001080:	e051      	b.n	8001126 <calculateTuningOffset+0xee>
-    } else if (diff < -2.0) {
+	} else if (diff < -2.0) {
  8001082:	edd7 7a05 	vldr	s15, [r7, #20]
  8001086:	eeb8 7a00 	vmov.f32	s14, #128	@ 0xc0000000 -2.0
  800108a:	eef4 7ac7 	vcmpe.f32	s15, s14
  800108e:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  8001092:	d505      	bpl.n	80010a0 <calculateTuningOffset+0x68>
-        string->tuning_offset = FLAT;
+		string->tuning_offset = FLAT;
  8001094:	68fb      	ldr	r3, [r7, #12]
  8001096:	2201      	movs	r2, #1
  8001098:	741a      	strb	r2, [r3, #16]
-        arrow_prefix = ">>";   // Flat
+		arrow_prefix = ">>";   // Flat
  800109a:	4b2e      	ldr	r3, [pc, #184]	@ (8001154 <calculateTuningOffset+0x11c>)
  800109c:	61fb      	str	r3, [r7, #28]
  800109e:	e042      	b.n	8001126 <calculateTuningOffset+0xee>
-    } else if (diff < -0.5) {
+	} else if (diff < -0.5) {
  80010a0:	edd7 7a05 	vldr	s15, [r7, #20]
  80010a4:	eebe 7a00 	vmov.f32	s14, #224	@ 0xbf000000 -0.5
  80010a8:	eef4 7ac7 	vcmpe.f32	s15, s14
  80010ac:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  80010b0:	d505      	bpl.n	80010be <calculateTuningOffset+0x86>
-        string->tuning_offset = SLIGHTLY_FLAT;
+		string->tuning_offset = SLIGHTLY_FLAT;
  80010b2:	68fb      	ldr	r3, [r7, #12]
  80010b4:	2202      	movs	r2, #2
  80010b6:	741a      	strb	r2, [r3, #16]
-        arrow_prefix = ">";    // Slightly flat
+		arrow_prefix = ">";    // Slightly flat
  80010b8:	4b27      	ldr	r3, [pc, #156]	@ (8001158 <calculateTuningOffset+0x120>)
  80010ba:	61fb      	str	r3, [r7, #28]
  80010bc:	e033      	b.n	8001126 <calculateTuningOffset+0xee>
-    } else if (diff <= 0.5) {
+	} else if (diff <= 0.5) {
  80010be:	edd7 7a05 	vldr	s15, [r7, #20]
  80010c2:	eeb6 7a00 	vmov.f32	s14, #96	@ 0x3f000000  0.5
  80010c6:	eef4 7ac7 	vcmpe.f32	s15, s14
  80010ca:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  80010ce:	d807      	bhi.n	80010e0 <calculateTuningOffset+0xa8>
-        string->tuning_offset = ON_PITCH;
+		string->tuning_offset = ON_PITCH;
  80010d0:	68fb      	ldr	r3, [r7, #12]
  80010d2:	2203      	movs	r2, #3
  80010d4:	741a      	strb	r2, [r3, #16]
-        arrow_prefix = ">";
+		arrow_prefix = ">";
  80010d6:	4b20      	ldr	r3, [pc, #128]	@ (8001158 <calculateTuningOffset+0x120>)
  80010d8:	61fb      	str	r3, [r7, #28]
-        arrow_suffix = "< In tune!";
+		arrow_suffix = "< In tune!";
  80010da:	4b20      	ldr	r3, [pc, #128]	@ (800115c <calculateTuningOffset+0x124>)
  80010dc:	61bb      	str	r3, [r7, #24]
  80010de:	e022      	b.n	8001126 <calculateTuningOffset+0xee>
-    } else if (diff <= 2.0) {
+	} else if (diff <= 2.0) {
  80010e0:	edd7 7a05 	vldr	s15, [r7, #20]
  80010e4:	eeb0 7a00 	vmov.f32	s14, #0	@ 0x40000000  2.0
  80010e8:	eef4 7ac7 	vcmpe.f32	s15, s14
  80010ec:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  80010f0:	d805      	bhi.n	80010fe <calculateTuningOffset+0xc6>
-        string->tuning_offset = SLIGHTLY_SHARP;
+		string->tuning_offset = SLIGHTLY_SHARP;
  80010f2:	68fb      	ldr	r3, [r7, #12]
  80010f4:	2204      	movs	r2, #4
  80010f6:	741a      	strb	r2, [r3, #16]
-        arrow_suffix = "<";    // Slightly sharp
+		arrow_suffix = "<";    // Slightly sharp
  80010f8:	4b19      	ldr	r3, [pc, #100]	@ (8001160 <calculateTuningOffset+0x128>)
  80010fa:	61bb      	str	r3, [r7, #24]
  80010fc:	e013      	b.n	8001126 <calculateTuningOffset+0xee>
-    } else if (diff <= 5.0) {
+	} else if (diff <= 5.0) {
  80010fe:	edd7 7a05 	vldr	s15, [r7, #20]
  8001102:	eeb1 7a04 	vmov.f32	s14, #20	@ 0x40a00000  5.0
  8001106:	eef4 7ac7 	vcmpe.f32	s15, s14
  800110a:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  800110e:	d805      	bhi.n	800111c <calculateTuningOffset+0xe4>
-        string->tuning_offset = SHARP;
+		string->tuning_offset = SHARP;
  8001110:	68fb      	ldr	r3, [r7, #12]
  8001112:	2205      	movs	r2, #5
  8001114:	741a      	strb	r2, [r3, #16]
-        arrow_suffix = "<<";   // Sharp
+		arrow_suffix = "<<";   // Sharp
  8001116:	4b13      	ldr	r3, [pc, #76]	@ (8001164 <calculateTuningOffset+0x12c>)
  8001118:	61bb      	str	r3, [r7, #24]
  800111a:	e004      	b.n	8001126 <calculateTuningOffset+0xee>
-    } else {
-        string->tuning_offset = VERY_SHARP;
+	} else {
+		string->tuning_offset = VERY_SHARP;
  800111c:	68fb      	ldr	r3, [r7, #12]
  800111e:	2206      	movs	r2, #6
  8001120:	741a      	strb	r2, [r3, #16]
-        arrow_suffix = "<<<";  // Very sharp
+		arrow_suffix = "<<<";  // Very sharp
  8001122:	4b11      	ldr	r3, [pc, #68]	@ (8001168 <calculateTuningOffset+0x130>)
  8001124:	61bb      	str	r3, [r7, #24]
-    }
+	}
 
-    // Format the message with arrows
-    snprintf(msg, msg_size, "%s%s%s%s\r\n", tuning_msg, arrow_prefix, string->note, arrow_suffix);
+	// Format the message with arrows
+	snprintf(msg, msg_size, "%s%s%s%s\r\n", tuning_msg, arrow_prefix, string->note, arrow_suffix);
  8001126:	68fb      	ldr	r3, [r7, #12]
  8001128:	68db      	ldr	r3, [r3, #12]
  800112a:	69ba      	ldr	r2, [r7, #24]
@@ -1530,6 +1533,7 @@ void calculateTuningOffset(GuitarString* string, char* msg, size_t msg_size) {
 
 
 
+// Cycles to the next GuitarString in the array, updating the current string pointer
 void switchString(GuitarString strings[], GuitarString** currentString) {
  8001170:	b480      	push	{r7}
  8001172:	b087      	sub	sp, #28
@@ -1537,14 +1541,16 @@ void switchString(GuitarString strings[], GuitarString** currentString) {
  8001176:	6078      	str	r0, [r7, #4]
  8001178:	6039      	str	r1, [r7, #0]
 
-    int currentIndex = -1;
+	int currentIndex = -1;  // Initialize index to invalid value
  800117a:	f04f 33ff 	mov.w	r3, #4294967295
  800117e:	617b      	str	r3, [r7, #20]
-    for (int i = 0; i < 6; i++) {
+
+	// Find the index of the current string in the array
+	for (int i = 0; i < 6; i++) {
  8001180:	2300      	movs	r3, #0
  8001182:	613b      	str	r3, [r7, #16]
  8001184:	e011      	b.n	80011aa <switchString+0x3a>
-        if (&strings[i] == *currentString) {
+		if (&strings[i] == *currentString) {
  8001186:	693a      	ldr	r2, [r7, #16]
  8001188:	4613      	mov	r3, r2
  800118a:	009b      	lsls	r3, r3, #2
@@ -1557,22 +1563,23 @@ void switchString(GuitarString strings[], GuitarString** currentString) {
  8001198:	681b      	ldr	r3, [r3, #0]
  800119a:	429a      	cmp	r2, r3
  800119c:	d102      	bne.n	80011a4 <switchString+0x34>
-            currentIndex = i;
+			currentIndex = i;  // Found the current string's index
  800119e:	693b      	ldr	r3, [r7, #16]
  80011a0:	617b      	str	r3, [r7, #20]
-            break;
+			break;
  80011a2:	e005      	b.n	80011b0 <switchString+0x40>
-    for (int i = 0; i < 6; i++) {
+	for (int i = 0; i < 6; i++) {
  80011a4:	693b      	ldr	r3, [r7, #16]
  80011a6:	3301      	adds	r3, #1
  80011a8:	613b      	str	r3, [r7, #16]
  80011aa:	693b      	ldr	r3, [r7, #16]
  80011ac:	2b05      	cmp	r3, #5
  80011ae:	ddea      	ble.n	8001186 <switchString+0x16>
-        }
-    }
+		}
+	}
 
-    int nextIndex = (currentIndex + 1) % 6;
+	// Calculate the index of the next string, cycling back to 0 after the last string
+	int nextIndex = (currentIndex + 1) % 6;
  80011b0:	697b      	ldr	r3, [r7, #20]
  80011b2:	1c5a      	adds	r2, r3, #1
  80011b4:	4b0d      	ldr	r3, [pc, #52]	@ (80011ec <switchString+0x7c>)
@@ -1585,7 +1592,9 @@ void switchString(GuitarString strings[], GuitarString** currentString) {
  80011c4:	005b      	lsls	r3, r3, #1
  80011c6:	1ad3      	subs	r3, r2, r3
  80011c8:	60fb      	str	r3, [r7, #12]
-    *currentString = &strings[nextIndex];
+
+	// Update the current string pointer to point to the next string
+	*currentString = &strings[nextIndex];
  80011ca:	68fa      	ldr	r2, [r7, #12]
  80011cc:	4613      	mov	r3, r2
  80011ce:	009b      	lsls	r3, r3, #2
@@ -1607,7 +1616,9 @@ void switchString(GuitarString strings[], GuitarString** currentString) {
 
 080011f0 <yin_detect_frequency>:
 
-#define THRESHOLD 0.025f          // Threshold for the YIN algorithm
+//Based on
+// YIN Frequency Detection Algorithm (See: "A robust algorithm for pitch tracking",
+// by A. de Cheveigné and H. Kawahara, 2002. DOI: 10.1109/ICASSP.2002.5744979)
 
 void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_rate, GuitarString* string) {
  80011f0:	e92d 03b0 	stmdb	sp!, {r4, r5, r7, r8, r9}
@@ -1619,13 +1630,13 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  80011fe:	603b      	str	r3, [r7, #0]
  8001200:	466b      	mov	r3, sp
  8001202:	4618      	mov	r0, r3
-	float32_t min_value = 1.0f;
+	float32_t min_value = 1.0f;  // Minimum value of the cumulative difference
  8001204:	f04f 537e 	mov.w	r3, #1065353216	@ 0x3f800000
  8001208:	657b      	str	r3, [r7, #84]	@ 0x54
-	uint32_t min_index = 0;
+	uint32_t min_index = 0;      // Index of the minimum cumulative difference
  800120a:	2300      	movs	r3, #0
  800120c:	653b      	str	r3, [r7, #80]	@ 0x50
-	float32_t cumulative_diff[length];
+	float32_t cumulative_diff[length];  // Array to store cumulative differences
  800120e:	68b9      	ldr	r1, [r7, #8]
  8001210:	460b      	mov	r3, r1
  8001212:	3b01      	subs	r3, #1
@@ -1656,15 +1667,15 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  8001256:	089b      	lsrs	r3, r3, #2
  8001258:	009b      	lsls	r3, r3, #2
  800125a:	63bb      	str	r3, [r7, #56]	@ 0x38
-	float32_t threshold = THRESHOLD;
+	float32_t threshold = THRESHOLD;    // Threshold for peak detection
  800125c:	4b6f      	ldr	r3, [pc, #444]	@ (800141c <yin_detect_frequency+0x22c>)
  800125e:	637b      	str	r3, [r7, #52]	@ 0x34
 
-	float32_t target_frequency = string->targetFrequency;
+	float32_t target_frequency = string->targetFrequency;  // Target frequency of the string
  8001260:	683b      	ldr	r3, [r7, #0]
  8001262:	689b      	ldr	r3, [r3, #8]
  8001264:	633b      	str	r3, [r7, #48]	@ 0x30
-	uint32_t target_lag = (uint32_t)(sample_rate / target_frequency);
+	uint32_t target_lag = (uint32_t)(sample_rate / target_frequency);  // Expected lag for the target frequency
  8001266:	687b      	ldr	r3, [r7, #4]
  8001268:	ee07 3a90 	vmov	s15, r3
  800126c:	eef8 6a67 	vcvt.f32.u32	s13, s15
@@ -1674,6 +1685,7 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  800127c:	ee17 3a90 	vmov	r3, s15
  8001280:	62fb      	str	r3, [r7, #44]	@ 0x2c
 
+	// Define the range of lags to search around the target frequency
 	uint32_t start_lag = target_lag - 50;
  8001282:	6afb      	ldr	r3, [r7, #44]	@ 0x2c
  8001284:	3b32      	subs	r3, #50	@ 0x32
@@ -1683,14 +1695,16 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  800128a:	3332      	adds	r3, #50	@ 0x32
  800128c:	627b      	str	r3, [r7, #36]	@ 0x24
 
-	// Step 1: Calculate difference function
-	for (uint32_t lag = start_lag ; lag < end_lag; lag++) {
+	// Step 1: Calculate the difference function over the specified lag range
+	for (uint32_t lag = start_lag; lag < end_lag; lag++) {
  800128e:	6abb      	ldr	r3, [r7, #40]	@ 0x28
  8001290:	64fb      	str	r3, [r7, #76]	@ 0x4c
  8001292:	e063      	b.n	800135c <yin_detect_frequency+0x16c>
 		float32_t sum = 0.0f;
  8001294:	f04f 0300 	mov.w	r3, #0
  8001298:	64bb      	str	r3, [r7, #72]	@ 0x48
+
+		// Compute squared difference between signal values separated by the current lag
 		for (uint32_t i = 0; i < length - lag; i++) {
  800129a:	2300      	movs	r3, #0
  800129c:	647b      	str	r3, [r7, #68]	@ 0x44
@@ -1727,6 +1741,8 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  80012e6:	429a      	cmp	r2, r3
  80012e8:	d3da      	bcc.n	80012a0 <yin_detect_frequency+0xb0>
 		}
+
+		// Normalize the difference function value
 		cumulative_diff[lag] = sum / (float32_t)(length - lag);
  80012ea:	68ba      	ldr	r2, [r7, #8]
  80012ec:	6cfb      	ldr	r3, [r7, #76]	@ 0x4c
@@ -1741,7 +1757,7 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  8001306:	4413      	add	r3, r2
  8001308:	edc3 7a00 	vstr	s15, [r3]
 
-		// Step 2: Check if cumulative difference crosses the threshold
+		// Step 2: Identify the minimum cumulative difference below the threshold
 		if (cumulative_diff[lag] < threshold && lag > 1) {
  800130c:	6bba      	ldr	r2, [r7, #56]	@ 0x38
  800130e:	6cfb      	ldr	r3, [r7, #76]	@ 0x4c
@@ -1772,10 +1788,10 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  800134c:	4413      	add	r3, r2
  800134e:	681b      	ldr	r3, [r3, #0]
  8001350:	657b      	str	r3, [r7, #84]	@ 0x54
-				min_index = lag;
+				min_index = lag;  // Update index of the detected lag
  8001352:	6cfb      	ldr	r3, [r7, #76]	@ 0x4c
  8001354:	653b      	str	r3, [r7, #80]	@ 0x50
-	for (uint32_t lag = start_lag ; lag < end_lag; lag++) {
+	for (uint32_t lag = start_lag; lag < end_lag; lag++) {
  8001356:	6cfb      	ldr	r3, [r7, #76]	@ 0x4c
  8001358:	3301      	adds	r3, #1
  800135a:	64fb      	str	r3, [r7, #76]	@ 0x4c
@@ -1787,17 +1803,19 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
 		}
 	}
 
+	// Step 3: Refine the detected lag to improve frequency accuracy
 	if (min_index > 0) {
  8001364:	6d3b      	ldr	r3, [r7, #80]	@ 0x50
  8001366:	2b00      	cmp	r3, #0
  8001368:	d051      	beq.n	800140e <yin_detect_frequency+0x21e>
-
 		float32_t lag_refined = min_index;
  800136a:	6d3b      	ldr	r3, [r7, #80]	@ 0x50
  800136c:	ee07 3a90 	vmov	s15, r3
  8001370:	eef8 7a67 	vcvt.f32.u32	s15, s15
  8001374:	edc7 7a10 	vstr	s15, [r7, #64]	@ 0x40
-	    if (min_index > start_lag && min_index < end_lag) {
+
+		// Parabolic interpolation around the detected minimum
+		if (min_index > start_lag && min_index < end_lag) {
  8001378:	6d3a      	ldr	r2, [r7, #80]	@ 0x50
  800137a:	6abb      	ldr	r3, [r7, #40]	@ 0x28
  800137c:	429a      	cmp	r2, r3
@@ -1806,7 +1824,7 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  8001382:	6a7b      	ldr	r3, [r7, #36]	@ 0x24
  8001384:	429a      	cmp	r2, r3
  8001386:	d230      	bcs.n	80013ea <yin_detect_frequency+0x1fa>
-	        float32_t prev = cumulative_diff[min_index - 1];
+			float32_t prev = cumulative_diff[min_index - 1];
  8001388:	6d3b      	ldr	r3, [r7, #80]	@ 0x50
  800138a:	3b01      	subs	r3, #1
  800138c:	6bba      	ldr	r2, [r7, #56]	@ 0x38
@@ -1814,7 +1832,7 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  8001390:	4413      	add	r3, r2
  8001392:	681b      	ldr	r3, [r3, #0]
  8001394:	623b      	str	r3, [r7, #32]
-	        float32_t next = cumulative_diff[min_index + 1];
+			float32_t next = cumulative_diff[min_index + 1];
  8001396:	6d3b      	ldr	r3, [r7, #80]	@ 0x50
  8001398:	3301      	adds	r3, #1
  800139a:	6bba      	ldr	r2, [r7, #56]	@ 0x38
@@ -1822,13 +1840,16 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  800139e:	4413      	add	r3, r2
  80013a0:	681b      	ldr	r3, [r3, #0]
  80013a2:	61fb      	str	r3, [r7, #28]
-	        lag_refined = min_index + (prev - next) / (2.0f * (prev - 2.0f * cumulative_diff[min_index] + next));
+
+			// Refine the lag using the neighboring points
+			lag_refined = min_index + (prev - next) /
  80013a4:	6d3b      	ldr	r3, [r7, #80]	@ 0x50
  80013a6:	ee07 3a90 	vmov	s15, r3
  80013aa:	eeb8 7a67 	vcvt.f32.u32	s14, s15
  80013ae:	edd7 6a08 	vldr	s13, [r7, #32]
  80013b2:	edd7 7a07 	vldr	s15, [r7, #28]
  80013b6:	ee36 6ae7 	vsub.f32	s12, s13, s15
+					(2.0f * (prev - 2.0f * cumulative_diff[min_index] + next));
  80013ba:	6bba      	ldr	r2, [r7, #56]	@ 0x38
  80013bc:	6d3b      	ldr	r3, [r7, #80]	@ 0x50
  80013be:	009b      	lsls	r3, r3, #2
@@ -1840,10 +1861,13 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  80013d2:	edd7 7a07 	vldr	s15, [r7, #28]
  80013d6:	ee76 7aa7 	vadd.f32	s15, s13, s15
  80013da:	ee77 6aa7 	vadd.f32	s13, s15, s15
+			lag_refined = min_index + (prev - next) /
  80013de:	eec6 7a26 	vdiv.f32	s15, s12, s13
  80013e2:	ee77 7a27 	vadd.f32	s15, s14, s15
  80013e6:	edc7 7a10 	vstr	s15, [r7, #64]	@ 0x40
-	    }
+		}
+
+		// Calculate the detected frequency using the refined lag
 		float32_t detected_freq = ((float32_t)sample_rate / lag_refined) + 1.0f;
  80013ea:	687b      	ldr	r3, [r7, #4]
  80013ec:	ee07 3a90 	vmov	s15, r3
@@ -1853,13 +1877,14 @@ void yin_detect_frequency(float32_t *buffer, uint32_t length, uint32_t sample_ra
  80013fc:	eeb7 7a00 	vmov.f32	s14, #112	@ 0x3f800000  1.0
  8001400:	ee77 7a87 	vadd.f32	s15, s15, s14
  8001404:	edc7 7a06 	vstr	s15, [r7, #24]
-		string->frequency = detected_freq;  // Update the string's frequency
+
+		// Update the frequency of the GuitarString structure
+		string->frequency = detected_freq;
  8001408:	683b      	ldr	r3, [r7, #0]
  800140a:	69ba      	ldr	r2, [r7, #24]
  800140c:	605a      	str	r2, [r3, #4]
  800140e:	4685      	mov	sp, r0
 	}
-
 }
  8001410:	bf00      	nop
  8001412:	375c      	adds	r7, #92	@ 0x5c
@@ -1984,30 +2009,35 @@ void kalmanFilter(float32_t* inputArray, float32_t* outputArray, int length) {
 void toggleMode() {
  80014ec:	b580      	push	{r7, lr}
  80014ee:	af00      	add	r7, sp, #0
-	if (current_mode == MODE_MICROPHONE) {
+    if (current_mode == MODE_MICROPHONE) {
  80014f0:	4b24      	ldr	r3, [pc, #144]	@ (8001584 <toggleMode+0x98>)
  80014f2:	781b      	ldrb	r3, [r3, #0]
  80014f4:	b2db      	uxtb	r3, r3
  80014f6:	2b01      	cmp	r3, #1
  80014f8:	d12d      	bne.n	8001556 <toggleMode+0x6a>
-		// Switch to ear tuning mode
+        // Switch to ear tuning mode
 
-		current_mode = MODE_EAR_TUNING;
+        current_mode = MODE_EAR_TUNING;
  80014fa:	4b22      	ldr	r3, [pc, #136]	@ (8001584 <toggleMode+0x98>)
  80014fc:	2200      	movs	r2, #0
  80014fe:	701a      	strb	r2, [r3, #0]
-		HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+
+        // Stop microphone input processing
+        HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
  8001500:	4821      	ldr	r0, [pc, #132]	@ (8001588 <toggleMode+0x9c>)
  8001502:	f001 ffd1 	bl	80034a8 <HAL_DFSDM_FilterRegularStop_DMA>
-		playSound = 1;
+
+        playSound = 1;  // Enable sound output for ear tuning
  8001506:	4b21      	ldr	r3, [pc, #132]	@ (800158c <toggleMode+0xa0>)
  8001508:	2201      	movs	r2, #1
  800150a:	601a      	str	r2, [r3, #0]
-		sprintf(msg, "Current mode: Ear Tuning\r\n");
+
+        // Notify the user of the current mode
+        sprintf(msg, "Current mode: Ear Tuning\r\n");
  800150c:	4920      	ldr	r1, [pc, #128]	@ (8001590 <toggleMode+0xa4>)
  800150e:	4821      	ldr	r0, [pc, #132]	@ (8001594 <toggleMode+0xa8>)
  8001510:	f006 fcde 	bl	8007ed0 <siprintf>
-		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
  8001514:	481f      	ldr	r0, [pc, #124]	@ (8001594 <toggleMode+0xa8>)
  8001516:	f7fe fec3 	bl	80002a0 <strlen>
  800151a:	4603      	mov	r3, r0
@@ -2016,7 +2046,9 @@ void toggleMode() {
  8001522:	491c      	ldr	r1, [pc, #112]	@ (8001594 <toggleMode+0xa8>)
  8001524:	481c      	ldr	r0, [pc, #112]	@ (8001598 <toggleMode+0xac>)
  8001526:	f005 f8d9 	bl	80066dc <HAL_UART_Transmit>
-		sprintf(msg, "Playing string %d (%s).\r\n", currString->number, currString->note);
+
+        // Notify which string is being played
+        sprintf(msg, "Playing string %d (%s).\r\n", currString->number, currString->note);
  800152a:	4b1c      	ldr	r3, [pc, #112]	@ (800159c <toggleMode+0xb0>)
  800152c:	681b      	ldr	r3, [r3, #0]
  800152e:	681a      	ldr	r2, [r3, #0]
@@ -2026,7 +2058,7 @@ void toggleMode() {
  8001536:	491a      	ldr	r1, [pc, #104]	@ (80015a0 <toggleMode+0xb4>)
  8001538:	4816      	ldr	r0, [pc, #88]	@ (8001594 <toggleMode+0xa8>)
  800153a:	f006 fcc9 	bl	8007ed0 <siprintf>
-		HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
  800153e:	4815      	ldr	r0, [pc, #84]	@ (8001594 <toggleMode+0xa8>)
  8001540:	f7fe feae 	bl	80002a0 <strlen>
  8001544:	4603      	mov	r3, r0
@@ -2035,22 +2067,22 @@ void toggleMode() {
  800154c:	4911      	ldr	r1, [pc, #68]	@ (8001594 <toggleMode+0xa8>)
  800154e:	4812      	ldr	r0, [pc, #72]	@ (8001598 <toggleMode+0xac>)
  8001550:	f005 f8c4 	bl	80066dc <HAL_UART_Transmit>
-		//HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
-		sprintf(msg, "Current mode: Microphone Tuning\r\n");
-		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
-		bufferFull = 1;
-	}
+        sprintf(msg, "Current mode: Microphone Tuning\r\n");
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+
+        bufferFull = 1;  // Reset or signal the buffer state
+    }
 }
  8001554:	e014      	b.n	8001580 <toggleMode+0x94>
-		current_mode = MODE_MICROPHONE;  // Switch to microphone mode
+        current_mode = MODE_MICROPHONE;
  8001556:	4b0b      	ldr	r3, [pc, #44]	@ (8001584 <toggleMode+0x98>)
  8001558:	2201      	movs	r2, #1
  800155a:	701a      	strb	r2, [r3, #0]
-		sprintf(msg, "Current mode: Microphone Tuning\r\n");
+        sprintf(msg, "Current mode: Microphone Tuning\r\n");
  800155c:	4911      	ldr	r1, [pc, #68]	@ (80015a4 <toggleMode+0xb8>)
  800155e:	480d      	ldr	r0, [pc, #52]	@ (8001594 <toggleMode+0xa8>)
  8001560:	f006 fcb6 	bl	8007ed0 <siprintf>
-		HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
+        HAL_UART_Transmit(&huart1, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
  8001564:	480b      	ldr	r0, [pc, #44]	@ (8001594 <toggleMode+0xa8>)
  8001566:	f7fe fe9b 	bl	80002a0 <strlen>
  800156a:	4603      	mov	r3, r0
@@ -2059,7 +2091,7 @@ void toggleMode() {
  8001572:	4908      	ldr	r1, [pc, #32]	@ (8001594 <toggleMode+0xa8>)
  8001574:	4808      	ldr	r0, [pc, #32]	@ (8001598 <toggleMode+0xac>)
  8001576:	f005 f8b1 	bl	80066dc <HAL_UART_Transmit>
-		bufferFull = 1;
+        bufferFull = 1;  // Reset or signal the buffer state
  800157a:	4b0b      	ldr	r3, [pc, #44]	@ (80015a8 <toggleMode+0xbc>)
  800157c:	2201      	movs	r2, #1
  800157e:	601a      	str	r2, [r3, #0]
@@ -2079,31 +2111,34 @@ void toggleMode() {
 
 080015ac <HAL_GPIO_EXTI_Callback>:
 
+//Called on falling and rising edge of button press (so press down and release)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  80015ac:	b580      	push	{r7, lr}
  80015ae:	b082      	sub	sp, #8
  80015b0:	af00      	add	r7, sp, #0
  80015b2:	4603      	mov	r3, r0
  80015b4:	80fb      	strh	r3, [r7, #6]
-	if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
+    if (GPIO_Pin == GPIO_PIN_13) {  // Blue button on PC13
  80015b6:	88fb      	ldrh	r3, [r7, #6]
  80015b8:	f5b3 5f00 	cmp.w	r3, #8192	@ 0x2000
  80015bc:	d13e      	bne.n	800163c <HAL_GPIO_EXTI_Callback+0x90>
 
-		//CHECK BUTTON RELEASE
-		if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET) {  // Button is released
+        // Check if the button is released
+        if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_13) == GPIO_PIN_SET) {  // Button is released
  80015be:	f44f 5100 	mov.w	r1, #8192	@ 0x2000
  80015c2:	4820      	ldr	r0, [pc, #128]	@ (8001644 <HAL_GPIO_EXTI_Callback+0x98>)
  80015c4:	f002 fea6 	bl	8004314 <HAL_GPIO_ReadPin>
  80015c8:	4603      	mov	r3, r0
  80015ca:	2b01      	cmp	r3, #1
  80015cc:	d131      	bne.n	8001632 <HAL_GPIO_EXTI_Callback+0x86>
-			button_release_time = HAL_GetTick();
+            button_release_time = HAL_GetTick();
  80015ce:	f001 f839 	bl	8002644 <HAL_GetTick>
  80015d2:	4603      	mov	r3, r0
  80015d4:	4a1c      	ldr	r2, [pc, #112]	@ (8001648 <HAL_GPIO_EXTI_Callback+0x9c>)
  80015d6:	6013      	str	r3, [r2, #0]
-			if (button_release_time - button_press_time >= 1000) {
+
+            // Check if the button was held for at least 1000 ms
+            if (button_release_time - button_press_time >= 1000) {
  80015d8:	4b1b      	ldr	r3, [pc, #108]	@ (8001648 <HAL_GPIO_EXTI_Callback+0x9c>)
  80015da:	681a      	ldr	r2, [r3, #0]
  80015dc:	4b1b      	ldr	r3, [pc, #108]	@ (800164c <HAL_GPIO_EXTI_Callback+0xa0>)
@@ -2111,20 +2146,20 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  80015e0:	1ad3      	subs	r3, r2, r3
  80015e2:	f5b3 7f7a 	cmp.w	r3, #1000	@ 0x3e8
  80015e6:	d302      	bcc.n	80015ee <HAL_GPIO_EXTI_Callback+0x42>
-				toggleMode();  // Button was held long enough
+                toggleMode();  // Switch modes when the button is held long enough
  80015e8:	f7ff ff80 	bl	80014ec <toggleMode>
-			}
-		} else {  // Button is pressed
-			button_press_time = HAL_GetTick();
-		}
-	}
+            }
+        } else {  // Button is pressed
+            button_press_time = HAL_GetTick();  // Record the time the button was pressed
+        }
+    }
 }
  80015ec:	e026      	b.n	800163c <HAL_GPIO_EXTI_Callback+0x90>
-				switchString(strings, &currString);
+                switchString(strings, &currString);
  80015ee:	4918      	ldr	r1, [pc, #96]	@ (8001650 <HAL_GPIO_EXTI_Callback+0xa4>)
  80015f0:	4818      	ldr	r0, [pc, #96]	@ (8001654 <HAL_GPIO_EXTI_Callback+0xa8>)
  80015f2:	f7ff fdbd 	bl	8001170 <switchString>
-				sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
+                sprintf(msg, "Switched to String %d (%s).\r\n", currString->number, currString->note);
  80015f6:	4b16      	ldr	r3, [pc, #88]	@ (8001650 <HAL_GPIO_EXTI_Callback+0xa4>)
  80015f8:	681b      	ldr	r3, [r3, #0]
  80015fa:	681a      	ldr	r2, [r3, #0]
@@ -2134,7 +2169,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  8001602:	4915      	ldr	r1, [pc, #84]	@ (8001658 <HAL_GPIO_EXTI_Callback+0xac>)
  8001604:	4815      	ldr	r0, [pc, #84]	@ (800165c <HAL_GPIO_EXTI_Callback+0xb0>)
  8001606:	f006 fc63 	bl	8007ed0 <siprintf>
-				HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+                HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
  800160a:	4814      	ldr	r0, [pc, #80]	@ (800165c <HAL_GPIO_EXTI_Callback+0xb0>)
  800160c:	f7fe fe48 	bl	80002a0 <strlen>
  8001610:	4603      	mov	r3, r0
@@ -2143,19 +2178,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
  8001618:	4910      	ldr	r1, [pc, #64]	@ (800165c <HAL_GPIO_EXTI_Callback+0xb0>)
  800161a:	4811      	ldr	r0, [pc, #68]	@ (8001660 <HAL_GPIO_EXTI_Callback+0xb4>)
  800161c:	f005 f85e 	bl	80066dc <HAL_UART_Transmit>
-				if (current_mode == MODE_EAR_TUNING){
+                if (current_mode == MODE_EAR_TUNING) {
  8001620:	4b10      	ldr	r3, [pc, #64]	@ (8001664 <HAL_GPIO_EXTI_Callback+0xb8>)
  8001622:	781b      	ldrb	r3, [r3, #0]
  8001624:	b2db      	uxtb	r3, r3
  8001626:	2b00      	cmp	r3, #0
  8001628:	d108      	bne.n	800163c <HAL_GPIO_EXTI_Callback+0x90>
-					playSound = 1;
+                    playSound = 1;
  800162a:	4b0f      	ldr	r3, [pc, #60]	@ (8001668 <HAL_GPIO_EXTI_Callback+0xbc>)
  800162c:	2201      	movs	r2, #1
  800162e:	601a      	str	r2, [r3, #0]
 }
  8001630:	e004      	b.n	800163c <HAL_GPIO_EXTI_Callback+0x90>
-			button_press_time = HAL_GetTick();
+            button_press_time = HAL_GetTick();  // Record the time the button was pressed
  8001632:	f001 f807 	bl	8002644 <HAL_GetTick>
  8001636:	4603      	mov	r3, r0
  8001638:	4a04      	ldr	r2, [pc, #16]	@ (800164c <HAL_GPIO_EXTI_Callback+0xa0>)
@@ -2270,86 +2305,78 @@ int main(void)
  80016dc:	d002      	beq.n	80016e4 <main+0x4c>
  80016de:	2b01      	cmp	r3, #1
  80016e0:	d01a      	beq.n	8001718 <main+0x80>
- 80016e2:	e7f7      	b.n	80016d4 <main+0x3c>
-		case MODE_EAR_TUNING:
+		        }
+		        break;
 
+		    default:
 
-		if (playSound == 1){
+		        break;
+ 80016e2:	e05c      	b.n	800179e <main+0x106>
+		        if (playSound == 1) {
  80016e4:	4b33      	ldr	r3, [pc, #204]	@ (80017b4 <main+0x11c>)
  80016e6:	681b      	ldr	r3, [r3, #0]
  80016e8:	2b01      	cmp	r3, #1
  80016ea:	d155      	bne.n	8001798 <main+0x100>
-			HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
+		            HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);
  80016ec:	2100      	movs	r1, #0
  80016ee:	482e      	ldr	r0, [pc, #184]	@ (80017a8 <main+0x110>)
  80016f0:	f001 fa2a 	bl	8002b48 <HAL_DAC_Stop_DMA>
-			HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1, (uint32_t*)sine_samples[currString->number], 1024, DAC_ALIGN_12B_R);
+		                               (uint32_t*)sine_samples[currString->number],
  80016f4:	4b2a      	ldr	r3, [pc, #168]	@ (80017a0 <main+0x108>)
  80016f6:	681b      	ldr	r3, [r3, #0]
  80016f8:	681b      	ldr	r3, [r3, #0]
  80016fa:	031b      	lsls	r3, r3, #12
  80016fc:	4a2e      	ldr	r2, [pc, #184]	@ (80017b8 <main+0x120>)
  80016fe:	441a      	add	r2, r3
+		            HAL_DAC_Start_DMA(&hdac1, DAC_CHANNEL_1,
  8001700:	2300      	movs	r3, #0
  8001702:	9300      	str	r3, [sp, #0]
  8001704:	f44f 6380 	mov.w	r3, #1024	@ 0x400
  8001708:	2100      	movs	r1, #0
  800170a:	4827      	ldr	r0, [pc, #156]	@ (80017a8 <main+0x110>)
  800170c:	f001 f950 	bl	80029b0 <HAL_DAC_Start_DMA>
-			playSound = 0;
+		            playSound = 0;  // Reset the playSound flag
  8001710:	4b28      	ldr	r3, [pc, #160]	@ (80017b4 <main+0x11c>)
  8001712:	2200      	movs	r2, #0
  8001714:	601a      	str	r2, [r3, #0]
-		}
-
-			break;
+		        break;
  8001716:	e03f      	b.n	8001798 <main+0x100>
-
-		case MODE_MICROPHONE:
-			HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);;
+		        HAL_DAC_Stop_DMA(&hdac1, DAC_CHANNEL_1);  // Ensure DAC output is stopped
  8001718:	2100      	movs	r1, #0
  800171a:	4823      	ldr	r0, [pc, #140]	@ (80017a8 <main+0x110>)
  800171c:	f001 fa14 	bl	8002b48 <HAL_DAC_Stop_DMA>
-
-			if (bufferFull == 1){
+		        if (bufferFull == 1) {
  8001720:	4b26      	ldr	r3, [pc, #152]	@ (80017bc <main+0x124>)
  8001722:	681b      	ldr	r3, [r3, #0]
  8001724:	2b01      	cmp	r3, #1
  8001726:	d139      	bne.n	800179c <main+0x104>
-
-				//mic process returns -25 in first buffer out index
-				// when rms amplitude below threshold (too quiet)
-				mic_process(mic_rec, mic_out, BUFFER_SIZE);
+		            mic_process(mic_rec, mic_out, BUFFER_SIZE);
  8001728:	f44f 6200 	mov.w	r2, #2048	@ 0x800
  800172c:	4924      	ldr	r1, [pc, #144]	@ (80017c0 <main+0x128>)
  800172e:	4825      	ldr	r0, [pc, #148]	@ (80017c4 <main+0x12c>)
  8001730:	f000 faa2 	bl	8001c78 <mic_process>
-
-				//threshold detection,
-				if (mic_out[0] != -25){
+		            if (mic_out[0] != -25) {
  8001734:	4b22      	ldr	r3, [pc, #136]	@ (80017c0 <main+0x128>)
  8001736:	edd3 7a00 	vldr	s15, [r3]
  800173a:	eebb 7a09 	vmov.f32	s14, #185	@ 0xc1c80000 -25.0
  800173e:	eef4 7a47 	vcmp.f32	s15, s14
  8001742:	eef1 fa10 	vmrs	APSR_nzcv, fpscr
  8001746:	d01a      	beq.n	800177e <main+0xe6>
-					yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
+		                yin_detect_frequency(mic_out, BUFFER_SIZE, SAMPLE_RATE, currString);
  8001748:	4b15      	ldr	r3, [pc, #84]	@ (80017a0 <main+0x108>)
  800174a:	681b      	ldr	r3, [r3, #0]
  800174c:	f64b 3280 	movw	r2, #48000	@ 0xbb80
  8001750:	f44f 6100 	mov.w	r1, #2048	@ 0x800
  8001754:	481a      	ldr	r0, [pc, #104]	@ (80017c0 <main+0x128>)
  8001756:	f7ff fd4b 	bl	80011f0 <yin_detect_frequency>
-					calculateTuningOffset(currString, msg, MSG_SIZE);
+		                calculateTuningOffset(currString, msg, MSG_SIZE);
  800175a:	4b11      	ldr	r3, [pc, #68]	@ (80017a0 <main+0x108>)
  800175c:	681b      	ldr	r3, [r3, #0]
  800175e:	2264      	movs	r2, #100	@ 0x64
  8001760:	4919      	ldr	r1, [pc, #100]	@ (80017c8 <main+0x130>)
  8001762:	4618      	mov	r0, r3
  8001764:	f7ff fc68 	bl	8001038 <calculateTuningOffset>
-					//sprintf(msg, "Predicted frequency: %f Hz \r\n", currString->frequency);
-
-					HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
+		                HAL_UART_Transmit(&huart1, (uint8_t *)msg, strlen(msg), HAL_MAX_DELAY);
  8001768:	4817      	ldr	r0, [pc, #92]	@ (80017c8 <main+0x130>)
  800176a:	f7fe fd99 	bl	80002a0 <strlen>
  800176e:	4603      	mov	r3, r0
@@ -2358,27 +2385,24 @@ int main(void)
  8001776:	4914      	ldr	r1, [pc, #80]	@ (80017c8 <main+0x130>)
  8001778:	4814      	ldr	r0, [pc, #80]	@ (80017cc <main+0x134>)
  800177a:	f004 ffaf 	bl	80066dc <HAL_UART_Transmit>
-				}
-				HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
+		            HAL_DFSDM_FilterRegularStop_DMA(&hdfsdm1_filter2);
  800177e:	4814      	ldr	r0, [pc, #80]	@ (80017d0 <main+0x138>)
  8001780:	f001 fe92 	bl	80034a8 <HAL_DFSDM_FilterRegularStop_DMA>
-				HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
+		            HAL_DFSDM_FilterRegularStart_DMA(&hdfsdm1_filter2, mic_rec, MIC_REC_SIZE);
  8001784:	f640 02c8 	movw	r2, #2248	@ 0x8c8
  8001788:	490e      	ldr	r1, [pc, #56]	@ (80017c4 <main+0x12c>)
  800178a:	4811      	ldr	r0, [pc, #68]	@ (80017d0 <main+0x138>)
  800178c:	f001 fe0a 	bl	80033a4 <HAL_DFSDM_FilterRegularStart_DMA>
-				bufferFull = 0;
+		            bufferFull = 0;  // Reset the bufferFull flag
  8001790:	4b0a      	ldr	r3, [pc, #40]	@ (80017bc <main+0x124>)
  8001792:	2200      	movs	r2, #0
  8001794:	601a      	str	r2, [r3, #0]
-			}
-
-			break;
+		        break;
  8001796:	e001      	b.n	800179c <main+0x104>
-			break;
+		        break;
  8001798:	bf00      	nop
  800179a:	e79b      	b.n	80016d4 <main+0x3c>
-			break;
+		        break;
  800179c:	bf00      	nop
 		switch (current_mode) {
  800179e:	e799      	b.n	80016d4 <main+0x3c>
